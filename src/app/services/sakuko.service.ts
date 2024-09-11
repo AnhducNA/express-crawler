@@ -52,6 +52,10 @@ export class SakukoService {
 
   async pageDetailPromise(link: string) {
     const browser = await puppeteer.launch()
+    console.log('Go to: ' + link)
+    const newPage = await browser.newPage()
+    await newPage.goto(link, { waitUntil: 'networkidle2' })
+
     const dataObj = {
       productId: '',
       productUrl: link,
@@ -65,9 +69,9 @@ export class SakukoService {
       percentDiscount: '',
       description: '',
     }
-    const newPage = await browser.newPage()
-    await newPage.goto(link)
     try {
+
+      // Evaluate the script tag content to extract product_collect object
       dataObj.productId = await newPage.$eval('#pro_sku > strong', (text) =>
         text.textContent.trim(),
       )
@@ -78,13 +82,10 @@ export class SakukoService {
       )
       dataObj.imageUrl = await newPage.$eval('.product-gallery img', (img) => img.src)
       dataObj.trademark = await newPage.$eval('.pro-vendor strong a', (a) => a.textContent)
+      dataObj.price = await newPage.$eval('.product-price > del', (del) => del.textContent)
       dataObj.promotionalPrice = await newPage.$eval('span.pro-price', (span) => span.textContent)
       dataObj.percentDiscount = await newPage.$eval('span.pro-percent', (span) => span.textContent)
-      dataObj.price = await newPage.$eval('.product-price > del', (del) => del.textContent)
       dataObj.shortDescription = await newPage.$eval('.pd_short_desc', (div) =>
-        div.textContent.trim(),
-      )
-      dataObj.description = await newPage.$eval('.description-productdetail', (div) =>
         div.textContent.trim(),
       )
       dataObj.description = await newPage.$$eval('.description-productdetail', (els) => {
@@ -93,6 +94,7 @@ export class SakukoService {
     } catch (error) {}
 
     await newPage.close()
+
     return dataObj
   }
 
