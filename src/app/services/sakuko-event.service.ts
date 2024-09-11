@@ -1,32 +1,14 @@
-import { Service } from 'typedi'
 import puppeteer from 'puppeteer'
+import { Service } from 'typedi'
 import fs from 'fs'
 
 @Service()
-export class SakukoService {
-  async scrapeData() {
-    const categoryUrls = [
-      'https://sakukostore.com.vn/collections/sua-cho-be',
-      'https://sakukostore.com.vn/collections/me-be',
-      'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      'https://sakukostore.com.vn/collections/thuc-pham',
-      'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-    ]
-    const prodcutData = []
-    for (const categoryUrl of categoryUrls) {
-      prodcutData.push(await this.scrapeListProductPage(categoryUrl))
-    }
-    console.log('Total scrape Data: ', prodcutData.length)
-    this.exportJsonFile(prodcutData)
-    return prodcutData
-  }
-
-  async scrapeListProductPage(urlListProduct: string) {
+export class SakukoEventService {
+  async getMidAutumnFestivalGifts() {
     const browser = await puppeteer.launch()
     console.log('Opening the browser......')
     const page = await browser.newPage()
-    await page.goto(urlListProduct)
+    await page.goto('https://sakukostore.com.vn/collections/set-qua-trung-thu-2024')
     const scrapedData = []
 
     const scrapeCurrentPage = async () => {
@@ -58,7 +40,8 @@ export class SakukoService {
         return await scrapeCurrentPage()
       }
       await page.close()
-      // await this.exportJsonFile(scrapedData)
+      console.log('Total scrape Data: ', scrapedData.length)
+      await this.exportJsonFile(scrapedData)
 
       return { status: true, data: scrapedData }
     }
@@ -95,6 +78,7 @@ export class SakukoService {
       }
       return null // Return null if not found
     })
+
     await browser.close()
 
     // Handle the case if no product data was found
@@ -103,7 +87,6 @@ export class SakukoService {
         productId: dataObject.id,
         productUrl: link,
         title: dataObject.title,
-        type: dataObject.type,
         inventoryQuantity: dataObject.variants[0].inventory_quantity,
         featuredImage: dataObject.featured_image,
         images: dataObject.images,
@@ -123,14 +106,12 @@ export class SakukoService {
     }
   }
 
-  exportJsonFile(scrapedData: object[]) {
-    fs.writeFile('data/all.json', JSON.stringify(scrapedData), 'utf8', function (err) {
+  async exportJsonFile(scrapedData: object[]) {
+    fs.writeFile('data/autumnFestivalGift.json', JSON.stringify(scrapedData), 'utf8', function (err) {
       if (err) {
         return console.log(err)
       }
-      console.log(
-        "The data has been scraped and saved successfully! View it at './data/set-qua-trung-thu-2024.json'",
-      )
+      console.log("The data has been scraped and saved successfully! View it at './data/set-qua-trung-thu-2024.json'")
     })
   }
 }
