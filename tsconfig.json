@@ -1,0 +1,53 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": ["es2017", "esnext.asynciterable"],
+    "typeRoots": ["node_modules/@types"],
+    "types": ["@types/jest"],
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "pretty": true,
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "dist",
+    "allowJs": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "baseUrl": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "@app": ["src/app"],
+      "@controllers/*": ["src/app/controllers/*"],
+      "@decorators/*": ["src/decorators/*"],
+      "@dtos/*": ["src/dtos/*"],
+      "@enum/*": ["src/enum/*"],
+      "@abis/*": ["src/abis/*"],
+      "@env": ["src/env"],
+      "@exceptions/*": ["src/common/exceptions/*"],
+      "@lib/*": ["src/common/lib/*"],
+      "@middlewares/*": ["src/app/middlewares/*"],
+      "@models/*": ["src/models/*"],
+      "@interfaces/*": ["src/interfaces/*"],
+      "@repositories/*": ["src/app/repositories/*"],
+      "@utils/*": ["src/common/utils/*"],
+      "@vendor-services/*": ["src/vendor-services/*"],
+      "@contract-services/*": ["src/vendor-services/contract-services/*"],
+      "@service/*": ["src/app/services/*"],
+      "@common/*": ["src/common/*"],
+      "@modules/*": ["src/app/modules/*"],
+      "@databases/*": ["src/databases/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.json", "src/tests/*.test.ts", "src/tests/**/*.test.ts"],
+  "exclude": ["node_modules", "src/logs", "src/tests"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}
