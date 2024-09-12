@@ -3,7 +3,7 @@ import puppeteer, { Browser } from 'puppeteer'
 import fs from 'fs'
 
 @Service()
-export class SakukoService {
+export class SakukoAutumnEventService {
   async getMidAutumnFestivalGifts() {
     const browser = await puppeteer.launch()
     console.log('Opening the browser......')

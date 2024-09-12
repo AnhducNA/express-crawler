@@ -7,20 +7,27 @@ import cors from 'cors'
 import { useContainer, useExpressServer } from 'routing-controllers'
 import { Container } from 'typedi'
 import path from 'path'
-import mongoose from 'mongoose'
-import { corsEnv, PORT } from './config/index.config'
+import * as cron from 'node-cron'
+import { PORT } from './config/index.config'
+import { SakukoService } from '@service/sakuko.service'
 
 class App {
   public app: express.Application = express()
   public port: string | number
+  private sakukoService: SakukoService
 
   constructor() {
     this.port = PORT || 3000
     this.initializeMiddlewares()
     this.initializeRoutes()
+    this.sakukoService = new SakukoService()
   }
 
   public listen() {
+    cron.schedule('15 12,22 * * *', async () => {
+      console.log('running scrapeData 12 hours')
+      await this.sakukoService.scrapeData()
+    })
     return new Promise((resolve) => {
       this.app.listen(this.port, () => {
         console.log(`🚀 App listening on the port ${this.port}`)
@@ -30,10 +37,6 @@ class App {
 
   public getServer() {
     return this.app
-  }
-
-  static async closeDB() {
-    await mongoose.disconnect()
   }
 
   private initializeMiddlewares() {
