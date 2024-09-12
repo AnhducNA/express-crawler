@@ -2,12 +2,39 @@ import { SakukoEventService } from '@service/sakuko-event.service'
 import { SakukoService } from '@service/sakuko.service'
 import { Get, JsonController, Res } from 'routing-controllers'
 import { Service } from 'typedi'
+import reader from 'xlsx'
 
 @JsonController('/sakuko')
 @Service()
 export class UserController {
   private readonly sakukoService = new SakukoService()
   private readonly sakukoEventService = new SakukoEventService()
+
+  @Get('/download-excel')
+  async downloadExcel() {
+    const file = reader.readFile('./data/data.xlsx')
+    let student_data = [
+      {
+        Student: 'Nikhil',
+        Age: 22,
+        Branch: 'ISE',
+        Marks: 70,
+      },
+      {
+        Student: 'Amitha',
+        Age: 21,
+        Branch: 'EC',
+        Marks: 80,
+      },
+    ]
+    const ws = reader.utils.json_to_sheet(student_data)
+
+    reader.utils.book_append_sheet(file, ws, 'All')
+
+    // Writing to our file
+    reader.writeFile(file, './data/data.xlsx')
+    return true
+  }
 
   //  QuaTrungThu2024
   @Get('/autumn-festival')

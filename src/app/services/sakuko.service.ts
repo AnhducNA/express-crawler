@@ -1,6 +1,7 @@
 import { Service } from 'typedi'
 import puppeteer, { Page } from 'puppeteer'
 import fs from 'fs'
+import reader from 'xlsx'
 
 @Service()
 export class SakukoService {
@@ -14,26 +15,26 @@ export class SakukoService {
         name: 'sua-cho-be',
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      // {
-      //   name: 'me-be',
-      //   url: 'https://sakukostore.com.vn/collections/me-be',
-      // },
-      // {
-      //   name: 'cham-soc-sac-dep',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      // },
-      // {
-      //   name: 'cham-soc-suc-khoe',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      // },
-      // {
-      //   name: 'thuc-pham',
-      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      // },
-      // {
-      //   name: 'nha-cua-doi-song',
-      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      // },
+      {
+        name: 'me-be',
+        url: 'https://sakukostore.com.vn/collections/me-be',
+      },
+      {
+        name: 'cham-soc-sac-dep',
+        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      },
+      {
+        name: 'cham-soc-suc-khoe',
+        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      },
+      {
+        name: 'thuc-pham',
+        url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      },
+      {
+        name: 'nha-cua-doi-song',
+        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      },
     ]
 
     const productData = []
@@ -41,6 +42,7 @@ export class SakukoService {
       const listProduct = await this.scrapeListProductPage(category.url)
       productData.push(...listProduct)
       this.exportJsonFile(listProduct, category.name)
+      this.exportExcelFile(listProduct, category.name)
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
@@ -48,6 +50,7 @@ export class SakukoService {
     console.log('================Completed===================')
 
     this.exportJsonFile(productData, 'all')
+    this.exportExcelFile(productData, 'all')
     return productData
   }
 
@@ -65,7 +68,9 @@ export class SakukoService {
       const urls = await page.$$eval('.product-loop', (elements) => {
         // Extract the links from the data
         const links = elements.map(
-          (el) => el.querySelector('.proloop-detail > h3 > a.quickview-product').href,
+          (el) =>
+            'https://sakukostore.com.vn' +
+            el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
         )
         return links
       })
@@ -113,23 +118,29 @@ export class SakukoService {
 
       // Handle the case if no product data was found
       if (dataObject) {
+        console.log(dataObject, 789789)
+
+        const percentDiscount = dataObject.compare_at_price
+          ? ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
+              Number(dataObject.compare_at_price)) *
+            100
+          : 0
         return {
           productId: dataObject.id,
           productUrl: link,
           title: dataObject.title,
           type: dataObject.type,
           inventoryQuantity: dataObject.variants[0].inventory_quantity,
+          inventoryPolicy: dataObject.variants[0].inventory_policy,
+          sku: dataObject.variants[0].sku,
+          barcode: dataObject.variants[0].barcode,
           featuredImage: dataObject.featured_image,
-          images: dataObject.images,
+          images: Array(dataObject.images).toString(),
           trademark: dataObject.vendor,
           shortDescription: dataObject.metadescription,
           price: dataObject.price,
           originalPrice: dataObject.compare_at_price,
-          percentDiscount:
-            ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
-              Number(dataObject.compare_at_price)) *
-              100 +
-            '%',
+          percentDiscount: percentDiscount + '%',
           description: dataObject.description,
         }
       }
@@ -163,13 +174,31 @@ export class SakukoService {
   }
 
   exportJsonFile(scrapedData: object[], nameFile: string) {
-    fs.writeFile(`data/${nameFile}.json`, JSON.stringify(scrapedData), 'utf8', function (err) {
-      if (err) {
-        return console.log(err)
-      }
-      console.log(
-        `The data has been scraped and saved successfully! View it at ./data/${nameFile}.json`,
-      )
-    })
+    try {
+      fs.writeFile(`data/${nameFile}.json`, JSON.stringify(scrapedData), 'utf8', function (err) {
+        if (err) {
+          return console.log(err)
+        }
+        console.log(
+          `The data has been scraped and saved successfully! View it at ./data/${nameFile}.json`,
+        )
+      })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async exportExcelFile(dataArray: object[], nameSheet?: string) {
+    try {
+      nameSheet = nameSheet ? nameSheet : 'all'
+      const file = reader.readFile('./data/data.xlsx')
+      const ws = reader.utils.json_to_sheet(dataArray)
+      reader.utils.book_append_sheet(file, ws, nameSheet)
+
+      // Writing to our file
+      reader.writeFile(file, './data/data.xlsx')
+    } catch (error) {
+      console.log(error)
+    }
   }
 }

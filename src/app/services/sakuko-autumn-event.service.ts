@@ -17,7 +17,7 @@ export class SakukoAutumnEventService {
       const urls = await page.$$eval('.product-loop', (elements) => {
         // Extract the links from the data
         const links = elements.map(
-          (el) => el.querySelector('.proloop-detail > h3 > a.quickview-product').href,
+          (el) => el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
         )
         return links
       })
