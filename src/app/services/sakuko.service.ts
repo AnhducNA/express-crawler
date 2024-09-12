@@ -6,14 +6,18 @@ import fs from 'fs'
 export class SakukoService {
   async scrapeData() {
     const categories = [
+      // {
+      //   name: 'set-qua-trung-thu-2024',
+      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+      // },
       {
         name: 'sua-cho-be',
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      {
-        name: 'me-be',
-        url: 'https://sakukostore.com.vn/collections/me-be',
-      },
+      // {
+      //   name: 'me-be',
+      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      // },
       // {
       //   name: 'cham-soc-sac-dep',
       //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
@@ -40,6 +44,7 @@ export class SakukoService {
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
+    console.timeLog('Total time scrapedData')
     console.log('================Completed===================')
 
     this.exportJsonFile(productData, 'all')
@@ -65,11 +70,14 @@ export class SakukoService {
         return links
       })
 
-      for (const link of urls) {
-        const currentPageData = await this.pageDetailPromise(link)
-        scrapedData.push(currentPageData)
-        console.log('currentPageData: ', currentPageData)
-      }
+      await Promise.all(
+        urls.map(async (link, index) => {
+          console.log(`Access browser detail product ${index + 1}: ` + link)
+          const currentPageData = await this.pageDetailPromise(link)
+          scrapedData.push(currentPageData)
+          console.log(`Detail product ${index + 1}: `, currentPageData)
+        }),
+      )
 
       let nextButtonExist = false
       try {
@@ -94,14 +102,12 @@ export class SakukoService {
     try {
       const browser = await puppeteer.launch({ headless: false })
       // Open a new page / tab in the browser.
-      console.time('Access browser detail product: ' + link)
       const page = await browser.newPage()
       // Navigate to the URL
       await page.goto(link, {
         waitUntil: 'domcontentloaded',
-        timeout: 50000,
+        timeout: 0,
       })
-      console.timeEnd('End time loading detail product')
       const dataObject = await this.getObjectDetailFromScript(page)
       await browser.close()
 
