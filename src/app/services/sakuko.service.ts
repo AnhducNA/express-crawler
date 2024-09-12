@@ -1,32 +1,58 @@
 import { Service } from 'typedi'
-import puppeteer from 'puppeteer'
+import puppeteer, { Page } from 'puppeteer'
 import fs from 'fs'
 
 @Service()
 export class SakukoService {
   async scrapeData() {
-    const categoryUrls = [
-      'https://sakukostore.com.vn/collections/sua-cho-be',
-      'https://sakukostore.com.vn/collections/me-be',
-      'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      'https://sakukostore.com.vn/collections/thuc-pham',
-      'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+    const categories = [
+      {
+        name: 'sua-cho-be',
+        url: 'https://sakukostore.com.vn/collections/sua-cho-be',
+      },
+      {
+        name: 'me-be',
+        url: 'https://sakukostore.com.vn/collections/me-be',
+      },
+      // {
+      //   name: 'cham-soc-sac-dep',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      // },
+      // {
+      //   name: 'cham-soc-suc-khoe',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      // },
+      // {
+      //   name: 'thuc-pham',
+      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      // },
+      // {
+      //   name: 'nha-cua-doi-song',
+      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      // },
     ]
-    const prodcutData = []
-    for (const categoryUrl of categoryUrls) {
-      prodcutData.push(await this.scrapeListProductPage(categoryUrl))
+
+    const productData = []
+    for (const category of categories) {
+      const listProduct = await this.scrapeListProductPage(category.url)
+      productData.push(...listProduct)
+      this.exportJsonFile(listProduct, category.name)
+      console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
-    console.log('Total scrape Data: ', prodcutData.length)
-    this.exportJsonFile(prodcutData)
-    return prodcutData
+    console.log('Total scrapedData: ', productData.length)
+    console.log('================Completed===================')
+
+    this.exportJsonFile(productData, 'all')
+    return productData
   }
 
   async scrapeListProductPage(urlListProduct: string) {
     const browser = await puppeteer.launch()
     console.log('Opening the browser......')
     const page = await browser.newPage()
-    await page.goto(urlListProduct)
+    await page.goto(urlListProduct, {
+      waitUntil: 'networkidle0',
+    })
     const scrapedData = []
 
     const scrapeCurrentPage = async () => {
@@ -58,23 +84,57 @@ export class SakukoService {
         return await scrapeCurrentPage()
       }
       await page.close()
-      // await this.exportJsonFile(scrapedData)
-
-      return { status: true, data: scrapedData }
+      return scrapedData
     }
 
     return await scrapeCurrentPage()
   }
 
   async pageDetailPromise(link: string) {
-    const browser = await puppeteer.launch({ headless: false })
-    // Open a new page / tab in the browser.
-    console.log('Access browser detail product: ' + link)
-    const page = await browser.newPage()
-    // Navigate to the URL
-    await page.goto(link)
+    try {
+      const browser = await puppeteer.launch({ headless: false })
+      // Open a new page / tab in the browser.
+      console.time('Access browser detail product: ' + link)
+      const page = await browser.newPage()
+      // Navigate to the URL
+      await page.goto(link, {
+        waitUntil: 'domcontentloaded',
+        timeout: 50000,
+      })
+      console.timeEnd('End time loading detail product')
+      const dataObject = await this.getObjectDetailFromScript(page)
+      await browser.close()
 
-    const dataObject = await page.evaluate(() => {
+      // Handle the case if no product data was found
+      if (dataObject) {
+        return {
+          productId: dataObject.id,
+          productUrl: link,
+          title: dataObject.title,
+          type: dataObject.type,
+          inventoryQuantity: dataObject.variants[0].inventory_quantity,
+          featuredImage: dataObject.featured_image,
+          images: dataObject.images,
+          trademark: dataObject.vendor,
+          shortDescription: dataObject.metadescription,
+          price: dataObject.price,
+          originalPrice: dataObject.compare_at_price,
+          percentDiscount:
+            ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
+              Number(dataObject.compare_at_price)) *
+              100 +
+            '%',
+          description: dataObject.description,
+        }
+      }
+      return
+    } catch (error) {
+      console.log(error)
+      return
+    }
+  }
+  async getObjectDetailFromScript(page: Page) {
+    return await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'))
 
       let productCollectScript: string | null = null
@@ -93,43 +153,16 @@ export class SakukoService {
           return JSON.parse(match[1])
         }
       }
-      return null // Return null if not found
     })
-    await browser.close()
-
-    // Handle the case if no product data was found
-    if (dataObject) {
-      return {
-        productId: dataObject.id,
-        productUrl: link,
-        title: dataObject.title,
-        type: dataObject.type,
-        inventoryQuantity: dataObject.variants[0].inventory_quantity,
-        featuredImage: dataObject.featured_image,
-        images: dataObject.images,
-        trademark: dataObject.vendor,
-        shortDescription: dataObject.metadescription,
-        price: dataObject.price,
-        originalPrice: dataObject.compare_at_price,
-        percentDiscount:
-          ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
-            Number(dataObject.compare_at_price)) *
-            100 +
-          '%',
-        description: dataObject.description,
-      }
-    } else {
-      throw new Error('Product data not found.')
-    }
   }
 
-  exportJsonFile(scrapedData: object[]) {
-    fs.writeFile('data/all.json', JSON.stringify(scrapedData), 'utf8', function (err) {
+  exportJsonFile(scrapedData: object[], nameFile: string) {
+    fs.writeFile(`data/${nameFile}.json`, JSON.stringify(scrapedData), 'utf8', function (err) {
       if (err) {
         return console.log(err)
       }
       console.log(
-        "The data has been scraped and saved successfully! View it at './data/set-qua-trung-thu-2024.json'",
+        `The data has been scraped and saved successfully! View it at ./data/${nameFile}.json`,
       )
     })
   }
