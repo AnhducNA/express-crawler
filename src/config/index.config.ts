@@ -29,3 +29,4 @@ export const jwt = {
   resetPasswordExpireIn: checkEnv('JWT_RESET_PASSWORD_EXPIRE_IN'),
   resetPasswordExpireFormat: checkEnv('JWT_RESET_PASSWORD_EXPIRE_FORMAT'),
 }
+export const chatxToken: string = checkEnv('CHATX_TOKEN')

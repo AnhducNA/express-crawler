@@ -2,9 +2,14 @@ import { Service } from 'typedi'
 import puppeteer, { Page } from 'puppeteer'
 import fs from 'fs'
 import reader from 'xlsx'
+import { ChatXService } from './chatx.service'
+import { IProduct } from '@interfaces/sakuko.product.interfact'
+import { chatxToken } from 'src/config/index.config'
 
 @Service()
 export class SakukoService {
+  constructor(protected chatxService: ChatXService) {}
+
   async scrapeData() {
     const categories = [
       // {
@@ -15,26 +20,26 @@ export class SakukoService {
         name: 'sua-cho-be',
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      {
-        name: 'me-be',
-        url: 'https://sakukostore.com.vn/collections/me-be',
-      },
-      {
-        name: 'cham-soc-sac-dep',
-        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      },
-      {
-        name: 'cham-soc-suc-khoe',
-        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      },
-      {
-        name: 'thuc-pham',
-        url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      },
-      {
-        name: 'nha-cua-doi-song',
-        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      },
+      // {
+      //   name: 'me-be',
+      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      // },
+      // {
+      //   name: 'cham-soc-sac-dep',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      // },
+      // {
+      //   name: 'cham-soc-suc-khoe',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      // },
+      // {
+      //   name: 'thuc-pham',
+      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      // },
+      // {
+      //   name: 'nha-cua-doi-song',
+      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      // },
     ]
 
     const productData = []
@@ -46,10 +51,9 @@ export class SakukoService {
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
-    console.timeLog('Total time scrapedData')
     console.log('================Completed===================')
 
-    this.exportJsonFile(productData, 'all')
+    this.exportJsonFile(productData, 'product')
     this.exportExcelFile(productData, 'all')
     return productData
   }
@@ -79,8 +83,16 @@ export class SakukoService {
         urls.map(async (link, index) => {
           console.log(`Access browser detail product ${index + 1}: ` + link)
           const currentPageData = await this.pageDetailPromise(link)
-          scrapedData.push(currentPageData)
-          console.log(`Detail product ${index + 1}: `, currentPageData)
+          if (currentPageData) {
+            scrapedData.push(currentPageData)
+            await this.chatxService.createSegments(
+              chatxToken,
+              'e9400aa5-1d35-461a-9f08-80c8f08ab753',
+              '6ffdc0da-4220-44b4-8d1e-be52f8abfe5c',
+              currentPageData,
+            )
+            console.log(`Detail product ${index + 1}: `, currentPageData)
+          }
         }),
       )
 
@@ -103,7 +115,7 @@ export class SakukoService {
     return await scrapeCurrentPage()
   }
 
-  async pageDetailPromise(link: string) {
+  async pageDetailPromise(link: string): Promise<IProduct> {
     try {
       const browser = await puppeteer.launch({ headless: false })
       // Open a new page / tab in the browser.
@@ -118,8 +130,6 @@ export class SakukoService {
 
       // Handle the case if no product data was found
       if (dataObject) {
-        console.log(dataObject, 789789)
-
         const percentDiscount = dataObject.compare_at_price
           ? ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
               Number(dataObject.compare_at_price)) *
@@ -173,7 +183,8 @@ export class SakukoService {
     })
   }
 
-  exportJsonFile(scrapedData: object[], nameFile: string) {
+  exportJsonFile(scrapedData: object[], nameFile?: string) {
+    nameFile = nameFile ? nameFile : 'product'
     try {
       fs.writeFile(`data/${nameFile}.json`, JSON.stringify(scrapedData), 'utf8', function (err) {
         if (err) {
@@ -193,8 +204,7 @@ export class SakukoService {
       nameSheet = nameSheet ? nameSheet : 'all'
       const file = reader.readFile('./data/data.xlsx')
       const ws = reader.utils.json_to_sheet(dataArray)
-      reader.utils.book_append_sheet(file, ws, nameSheet)
-
+      reader.utils.book_append_sheet(file, ws, nameSheet + new Date().getTime())
       // Writing to our file
       reader.writeFile(file, './data/data.xlsx')
     } catch (error) {

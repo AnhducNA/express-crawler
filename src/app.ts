@@ -25,7 +25,7 @@ class App {
 
   public listen() {
     cron.schedule('15 12,22 * * *', async () => {
-      console.log('running scrapeData 12 hours')
+      console.log('running scrapeData at 12:15 and 22:15 everyday')
       await this.sakukoService.scrapeData()
     })
     return new Promise((resolve) => {

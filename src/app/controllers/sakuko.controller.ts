@@ -7,8 +7,10 @@ import reader from 'xlsx'
 @JsonController('/sakuko')
 @Service()
 export class UserController {
-  private readonly sakukoService = new SakukoService()
-  private readonly sakukoEventService = new SakukoEventService()
+  constructor(
+    protected sakukoService: SakukoService,
+    protected sakukoEventService: SakukoEventService,
+  ) {}
 
   @Get('/download-excel')
   async downloadExcel() {
