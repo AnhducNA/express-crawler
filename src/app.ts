@@ -7,7 +7,6 @@ import cors from 'cors'
 import { useContainer, useExpressServer } from 'routing-controllers'
 import { Container } from 'typedi'
 import path from 'path'
-import * as cron from 'node-cron'
 import { PORT } from './config/index.config'
 import { SakukoService } from '@service/sakuko.service'
 
@@ -20,14 +19,9 @@ class App {
     this.port = PORT || 3000
     this.initializeMiddlewares()
     this.initializeRoutes()
-    this.sakukoService = new SakukoService()
   }
 
   public listen() {
-    cron.schedule('15 12,22 * * *', async () => {
-      console.log('running scrapeData at 12:15 and 22:15 everyday')
-      await this.sakukoService.scrapeData()
-    })
     return new Promise((resolve) => {
       this.app.listen(this.port, () => {
         console.log(`🚀 App listening on the port ${this.port}`)
