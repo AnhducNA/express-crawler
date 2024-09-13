@@ -8,12 +8,12 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
 
-      networkId: {
+      chatxId: {
+        allowNull: true,
+        field: 'chatx_id',
         type: Sequelize.INTEGER,
-        field: 'network_id',
-        allowNull: false,
-        references: { model: 'networks', key: 'id' },
       },
+
 
       name: {
         type: Sequelize.STRING(255),

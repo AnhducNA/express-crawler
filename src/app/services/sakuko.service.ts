@@ -3,8 +3,8 @@ import puppeteer, { Page } from 'puppeteer'
 import fs from 'fs'
 import reader from 'xlsx'
 import { ChatXService } from './chatx.service'
-import { IProduct } from '@interfaces/sakuko.product.interfact'
-import { chatxToken } from 'src/config/index.config'
+import { IProduct } from '@interfaces/sakuko.product.interface'
+import { chatxToken } from 'src/config/env.config'
 
 @Service()
 export class SakukoService {

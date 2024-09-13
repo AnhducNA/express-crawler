@@ -7,8 +7,9 @@ import cors from 'cors'
 import { useContainer, useExpressServer } from 'routing-controllers'
 import { Container } from 'typedi'
 import path from 'path'
-import { PORT } from './config/index.config'
+import { PORT } from './config/env.config'
 import { SakukoService } from '@service/sakuko.service'
+import DB from './config/database.config'
 
 class App {
   public app: express.Application = express()
@@ -19,6 +20,8 @@ class App {
     this.port = PORT || 3000
     this.initializeMiddlewares()
     this.initializeRoutes()
+    this.connectToDatabase()
+    this.testApi()
   }
 
   public listen() {
@@ -31,6 +34,17 @@ class App {
 
   public getServer() {
     return this.app
+  }
+
+  public testApi() {
+    this.app.get('/', (req, res) => {
+      res.send('Hello World!')
+    })
+  }
+
+  private connectToDatabase() {
+    console.log('Database connected successfully!')
+    DB.sequelize.authenticate()
   }
 
   private initializeMiddlewares() {
