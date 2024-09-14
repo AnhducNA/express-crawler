@@ -86,7 +86,10 @@ export class SakukoService {
           if (currentPageData) {
             scrapedData.push(currentPageData)
             await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-            console.log(`Detail product ${index + 1}: `, currentPageData)
+            console.log(`Detail product ${index + 1}: `, {
+              id: currentPageData.id,
+              title: currentPageData.title,
+            })
           }
         }),
       )

@@ -8,6 +8,10 @@ export class ProductService {
     return await ProductEntity.findOne({ where: { id } })
   }
 
+  async getChatxIdByOne(id: number) {
+    return await ProductEntity.findOne({ attributes: ['id', 'chatxId'], where: { id }, raw: true })
+  }
+
   async createOrUpdate(params: IProduct) {
     const data = await ProductEntity.findOne({
       attributes: ['id'],
@@ -15,14 +19,12 @@ export class ProductService {
       raw: true,
     })
     if (!data) {
-      await ProductEntity.create(params)
+      return await ProductEntity.create(params)
     } else {
-      await ProductEntity.update(params, { where: { id: params.id }, returning: true })
+      return await ProductEntity.update(params, { where: { id: params.id }})
     }
-    return await ProductEntity.findOne({
-      where: { id: params.id },
-      raw: true,
-    })
   }
-  
+  async updateChatxId(id: number, chatxId: string) {
+    return await ProductEntity.update({ chatxId }, { where: { id }})
+  }
 }

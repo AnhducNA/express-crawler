@@ -31,21 +31,22 @@ export class ChatXController {
       params.datasetId,
       params.documentId,
     )
-    return res.status(200).json({ data: data })
+    return res.status(200).json(data)
   }
 
-  @Delete('/datasets/:datasetId/segments/:segmentId')
+  @Delete('/datasets/:datasetId/documents/:documentId/segments/:segmentId')
   async deleteSegment(
-    @Params() params: { datasetId: string; segmentId: string },
+    @Params() params: { datasetId: string; documentId: string; segmentId: string },
     @QueryParams() queryParams: TokenChatxDto,
     @Res() res: any,
   ) {
     const data = await this.chatxService.deleteSegment(
       queryParams.token,
       params.datasetId,
+      params.documentId,
       params.segmentId,
     )
-    return res.status(200).json(data)
+    return res.status(200).json({ data })
   }
 
   @Post('/datasets/:datasetId/documents/:documentId/segments')
@@ -61,7 +62,7 @@ export class ChatXController {
       params.documentId,
       body,
     )
-    return res.status(200).json({ data: data })
+    return res.status(200).json(data)
   }
 
   @Get('/datasets/:datasetId/documents')

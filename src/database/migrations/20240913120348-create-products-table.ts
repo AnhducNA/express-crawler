@@ -10,7 +10,7 @@ module.exports = {
       chatxId: {
         allowNull: true,
         field: 'chatx_id',
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING(),
       },
       url: {
         type: Sequelize.STRING(255),
