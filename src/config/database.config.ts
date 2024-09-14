@@ -1,13 +1,14 @@
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
 import { db, NODE_ENV } from './env.config'
 import { Dialect } from 'sequelize'
+import ProductEntity from '@models/products.model'
 
 const sequelizeOptions: SequelizeOptions = {
   dialect: db.connection as Dialect,
   host: db.host,
   port: Number(db.port),
   storage: db.storage,
-  models: [],
+  models: [ProductEntity],
   modelMatch: (filename, member) => {
     return filename.substring(0, filename.indexOf('.model')) === member.toLowerCase()
   },

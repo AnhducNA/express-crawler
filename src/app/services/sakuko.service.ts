@@ -85,12 +85,7 @@ export class SakukoService {
           const currentPageData = await this.pageDetailPromise(link)
           if (currentPageData) {
             scrapedData.push(currentPageData)
-            await this.chatxService.createSegments(
-              chatxToken,
-              'e9400aa5-1d35-461a-9f08-80c8f08ab753',
-              '6ffdc0da-4220-44b4-8d1e-be52f8abfe5c',
-              currentPageData,
-            )
+            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
             console.log(`Detail product ${index + 1}: `, currentPageData)
           }
         }),
@@ -136,8 +131,8 @@ export class SakukoService {
             100
           : 0
         return {
-          productId: dataObject.id,
-          productUrl: link,
+          id: dataObject.id,
+          url: link,
           title: dataObject.title,
           type: dataObject.type,
           inventoryQuantity: dataObject.variants[0].inventory_quantity,

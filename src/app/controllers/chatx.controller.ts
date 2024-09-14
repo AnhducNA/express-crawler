@@ -55,7 +55,7 @@ export class ChatXController {
     @Body() body: ProductDto,
     @Res() res: any,
   ) {
-    const data = await this.chatxService.createSegments(
+    const data = await this.chatxService.createSegment(
       queryParams.token,
       params.datasetId,
       params.documentId,

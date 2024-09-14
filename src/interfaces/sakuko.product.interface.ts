@@ -1,6 +1,6 @@
 export interface IProduct {
-  productId: number
-  productUrl: string
+  id?: number
+  url: string
   title: string
   type: string
   inventoryQuantity: number
