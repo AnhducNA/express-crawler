@@ -53,7 +53,7 @@ module.exports = {
         allowNull: true,
       },
       images: {
-        type: Sequelize.STRING(),
+        type: Sequelize.TEXT('medium'),
         field: 'images',
         allowNull: true,
       },

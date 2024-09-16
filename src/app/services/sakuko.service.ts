@@ -12,18 +12,18 @@ export class SakukoService {
 
   async scrapeData() {
     const categories = [
-      {
-        name: 'set-qua-trung-thu-2024',
-        url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-      },
-      {
-        name: 'sua-cho-be',
-        url: 'https://sakukostore.com.vn/collections/sua-cho-be',
-      },
       // {
-      //   name: 'me-be',
-      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      //   name: 'set-qua-trung-thu-2024',
+      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
       // },
+      // {
+      //   name: 'sua-cho-be',
+      //   url: 'https://sakukostore.com.vn/collections/sua-cho-be',
+      // },
+      {
+        name: 'me-be',
+        url: 'https://sakukostore.com.vn/collections/me-be',
+      },
       // {
       //   name: 'cham-soc-sac-dep',
       //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
@@ -75,47 +75,55 @@ export class SakukoService {
     let scrapeCurrentNumPage = 1
     const scrapeCurrentPage = async () => {
       console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
+      let urls = []
+      try {
+        await page.waitForSelector('.wraplist-collection')
+        urls = await page.$$eval('.product-loop', (elements) => {
+          // Extract the links from the data
+          const links = elements.map(
+            (el) =>
+              'https://sakukostore.com.vn' +
+              el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
+          )
+          return links
+        })
+      } catch (error) {}
 
-      await page.waitForSelector('.wraplist-collection')
-      const urls = await page.$$eval('.product-loop', (elements) => {
-        // Extract the links from the data
-        const links = elements.map(
-          (el) =>
-            'https://sakukostore.com.vn' +
-            el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
-        )
-        return links
-      })
-
-      // console.log(`Access browser detail product ${1}: ` + urls[1])
-      // const currentPageData = await this.pageDetailPromise(urls[1])
-      // if (currentPageData.id) {
-      //   scrapedData.push(currentPageData)
-      //   await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-      //   console.log(`Detail product ${+1}: `, {
-      //     id: currentPageData.id,
-      //     title: currentPageData.title,
-      //   })
-      // }
-
-      await Promise.all(
-        urls.map(async (link, index) => {
-          try {
-            console.log(`Access browser detail product ${index + 1}: ` + link)
-            const currentPageData = await this.pageDetailPromise(link)
-            if (currentPageData.id) {
-              scrapedData.push(currentPageData)
-              await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-              console.log(`Detail product ${index + 1}: `, {
-                id: currentPageData.id,
-                title: currentPageData.title,
-              })
-            }
-          } catch (error) {
-            console.error(`Error accessing detail product at ${link}:`, error)
+      for (const link of urls) {
+        try {
+          console.log(`Access browser detail product: ` + link)
+          const currentPageData = await this.pageDetailPromise(link)
+          if (currentPageData.id) {
+            scrapedData.push(currentPageData)
+            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+            console.log(`Detail product: `, {
+              id: currentPageData.id,
+              title: currentPageData.title,
+            })
           }
-        }),
-      )
+        } catch (error) {
+          console.error(`Error accessing detail product at ${link}:`, error)
+        }
+      }
+
+      // await Promise.all(
+      //   urls.map(async (link, index) => {
+      //     try {
+      //       console.log(`Access browser detail product ${index + 1}: ` + link)
+      //       const currentPageData = await this.pageDetailPromise(link)
+      //       if (currentPageData.id) {
+      //         scrapedData.push(currentPageData)
+      //         await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+      //         console.log(`Detail product ${index + 1}: `, {
+      //           id: currentPageData.id,
+      //           title: currentPageData.title,
+      //         })
+      //       }
+      //     } catch (error) {
+      //       console.error(`Error accessing detail product at ${link}:`, error)
+      //     }
+      //   }),
+      // )
 
       let nextButtonExist = false
       try {
