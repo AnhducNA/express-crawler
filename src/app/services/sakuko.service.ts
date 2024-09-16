@@ -12,34 +12,34 @@ export class SakukoService {
 
   async scrapeData() {
     const categories = [
-      // {
-      //   name: 'set-qua-trung-thu-2024',
-      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-      // },
+      {
+        name: 'set-qua-trung-thu-2024',
+        url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+      },
       {
         name: 'sua-cho-be',
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      {
-        name: 'me-be',
-        url: 'https://sakukostore.com.vn/collections/me-be',
-      },
-      {
-        name: 'cham-soc-sac-dep',
-        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      },
-      {
-        name: 'cham-soc-suc-khoe',
-        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      },
-      {
-        name: 'thuc-pham',
-        url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      },
-      {
-        name: 'nha-cua-doi-song',
-        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      },
+      // {
+      //   name: 'me-be',
+      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      // },
+      // {
+      //   name: 'cham-soc-sac-dep',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      // },
+      // {
+      //   name: 'cham-soc-suc-khoe',
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      // },
+      // {
+      //   name: 'thuc-pham',
+      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      // },
+      // {
+      //   name: 'nha-cua-doi-song',
+      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      // },
     ]
 
     const productData = []
@@ -93,7 +93,7 @@ export class SakukoService {
         urls.map(async (link, index) => {
           console.log(`Access browser detail product ${index + 1}: ` + link)
           const currentPageData = await this.pageDetailPromise(link)
-          if (currentPageData) {
+          if (currentPageData.id) {
             scrapedData.push(currentPageData)
             await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
             console.log(`Detail product ${index + 1}: `, {
@@ -165,7 +165,7 @@ export class SakukoService {
       return
     } catch (error) {
       console.log(error)
-      return
+      return null;
     }
   }
   async getObjectDetailFromScript(page: Page) {
