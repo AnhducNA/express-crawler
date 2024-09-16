@@ -42,4 +42,10 @@ export const jwt = {
   resetPasswordExpireIn: checkEnv('JWT_RESET_PASSWORD_EXPIRE_IN'),
   resetPasswordExpireFormat: checkEnv('JWT_RESET_PASSWORD_EXPIRE_FORMAT'),
 }
+export const chatx = {
+  domain: checkEnv('CHATX_DOMAIN'),
+  token: checkEnv('CHATX_TOKEN'),
+  dataset: checkEnv('CHATX_DATASET'),
+  document: checkEnv('CHATX_DOCUMENT'),
+}
 export const chatxToken: string = checkEnv('CHATX_TOKEN')

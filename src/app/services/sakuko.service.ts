@@ -20,26 +20,26 @@ export class SakukoService {
         name: 'sua-cho-be',
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      // {
-      //   name: 'me-be',
-      //   url: 'https://sakukostore.com.vn/collections/me-be',
-      // },
-      // {
-      //   name: 'cham-soc-sac-dep',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      // },
-      // {
-      //   name: 'cham-soc-suc-khoe',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      // },
-      // {
-      //   name: 'thuc-pham',
-      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      // },
-      // {
-      //   name: 'nha-cua-doi-song',
-      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      // },
+      {
+        name: 'me-be',
+        url: 'https://sakukostore.com.vn/collections/me-be',
+      },
+      {
+        name: 'cham-soc-sac-dep',
+        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      },
+      {
+        name: 'cham-soc-suc-khoe',
+        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      },
+      {
+        name: 'thuc-pham',
+        url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      },
+      {
+        name: 'nha-cua-doi-song',
+        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      },
     ]
 
     const productData = []
@@ -79,6 +79,16 @@ export class SakukoService {
         return links
       })
 
+      // console.log(`Access browser detail product ${+1}: ` + urls[0])
+      // const currentPageData = await this.pageDetailPromise(urls[0])
+      // if (currentPageData) {
+      //   scrapedData.push(currentPageData)
+      //   await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+      //   console.log(`Detail product ${+1}: `, {
+      //     id: currentPageData.id,
+      //     title: currentPageData.title,
+      //   })
+      // }
       await Promise.all(
         urls.map(async (link, index) => {
           console.log(`Access browser detail product ${index + 1}: ` + link)

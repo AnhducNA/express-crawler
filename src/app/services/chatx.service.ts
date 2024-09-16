@@ -1,6 +1,6 @@
 import { ProductDto } from '@dtos/sakuko.dto'
 import axios from 'axios'
-import { chatxToken } from 'src/config/env.config'
+import { chatx, chatxToken } from 'src/config/env.config'
 import { Service } from 'typedi'
 import { ProductService } from './product.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
@@ -67,27 +67,29 @@ export class ChatXService {
   }
 
   async createOrUpdateSegmentsWithDatabaseToProduct(segmentParams: IProduct) {
-    await this.productService.createOrUpdate(segmentParams)
-    const productInDB = await this.productService.getChatxIdByOne(segmentParams.id)
-
-    if (productInDB.chatxId) {
-      return await this.updateSegment(
-        chatxToken,
-        'e9400aa5-1d35-461a-9f08-80c8f08ab753',
-        '6ffdc0da-4220-44b4-8d1e-be52f8abfe5c',
+    try {
+      await this.productService.createOrUpdate(segmentParams)
+      const productInDB = await this.productService.getChatxIdByOne(segmentParams.id)
+      if (productInDB.chatxId) {
+        return await this.updateSegment(
+          chatx.token,
+          chatx.dataset,
+          chatx.document,
+          segmentParams,
+          productInDB.chatxId,
+        )
+      }
+      const segmentNew = await this.createSegment(
+        chatx.token,
+        chatx.dataset,
+        chatx.document,
         segmentParams,
-        productInDB.chatxId,
       )
+      return await this.productService.updateChatxId(productInDB.id, segmentNew.id)
+    } catch (error) {
+      console.log(error.message)
+      return
     }
-    const segmentNew = await this.createSegment(
-      chatxToken,
-      'e9400aa5-1d35-461a-9f08-80c8f08ab753',
-      '6ffdc0da-4220-44b4-8d1e-be52f8abfe5c',
-      segmentParams,
-    )
-    console.log('segmentNew ', segmentNew)
-
-    return await this.productService.updateChatxId(productInDB.id, segmentNew.id)
   }
 
   async createSegment(

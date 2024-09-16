@@ -1,8 +1,6 @@
 import { GetDocumentsDto, TokenChatxDto } from '@dtos/chatx.dto'
 import { ProductDto } from '@dtos/sakuko.dto'
 import { ChatXService } from '@service/chatx.service'
-import { query } from 'express'
-import { Query } from 'mongoose'
 import {
   Body,
   Delete,
