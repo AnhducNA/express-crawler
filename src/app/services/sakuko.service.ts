@@ -62,12 +62,20 @@ export class SakukoService {
     const browser = await puppeteer.launch()
     console.log('Opening the browser......')
     const page = await browser.newPage()
-    await page.goto(urlListProduct, {
-      waitUntil: 'networkidle0',
-    })
-    const scrapedData = []
+    try {
+      await page.goto(urlListProduct, {
+        waitUntil: 'networkidle0',
+      })
+    } catch (error) {
+      console.error('Error opening product list page:', error)
+      return []
+    }
 
+    const scrapedData = []
+    let scrapeCurrentNumPage = 1
     const scrapeCurrentPage = async () => {
+      console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
+
       await page.waitForSelector('.wraplist-collection')
       const urls = await page.$$eval('.product-loop', (elements) => {
         // Extract the links from the data
@@ -79,9 +87,9 @@ export class SakukoService {
         return links
       })
 
-      // console.log(`Access browser detail product ${+1}: ` + urls[0])
-      // const currentPageData = await this.pageDetailPromise(urls[0])
-      // if (currentPageData) {
+      // console.log(`Access browser detail product ${1}: ` + urls[1])
+      // const currentPageData = await this.pageDetailPromise(urls[1])
+      // if (currentPageData.id) {
       //   scrapedData.push(currentPageData)
       //   await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
       //   console.log(`Detail product ${+1}: `, {
@@ -89,17 +97,22 @@ export class SakukoService {
       //     title: currentPageData.title,
       //   })
       // }
+
       await Promise.all(
         urls.map(async (link, index) => {
-          console.log(`Access browser detail product ${index + 1}: ` + link)
-          const currentPageData = await this.pageDetailPromise(link)
-          if (currentPageData.id) {
-            scrapedData.push(currentPageData)
-            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-            console.log(`Detail product ${index + 1}: `, {
-              id: currentPageData.id,
-              title: currentPageData.title,
-            })
+          try {
+            console.log(`Access browser detail product ${index + 1}: ` + link)
+            const currentPageData = await this.pageDetailPromise(link)
+            if (currentPageData.id) {
+              scrapedData.push(currentPageData)
+              await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+              console.log(`Detail product ${index + 1}: `, {
+                id: currentPageData.id,
+                title: currentPageData.title,
+              })
+            }
+          } catch (error) {
+            console.error(`Error accessing detail product at ${link}:`, error)
           }
         }),
       )
@@ -112,14 +125,14 @@ export class SakukoService {
         nextButtonExist = false
       }
 
-      if (!!nextButtonExist) {
+      if (nextButtonExist) {
         await page.click('#pagination li a i.fa-angle-double-right')
         return await scrapeCurrentPage()
       }
       await page.close()
+      await browser.close()
       return scrapedData
     }
-
     return await scrapeCurrentPage()
   }
 
@@ -131,7 +144,7 @@ export class SakukoService {
       // Navigate to the URL
       await page.goto(link, {
         waitUntil: 'domcontentloaded',
-        timeout: 0,
+        timeout: 50000,
       })
       const dataObject = await this.getObjectDetailFromScript(page)
       await browser.close()
@@ -165,7 +178,7 @@ export class SakukoService {
       return
     } catch (error) {
       console.log(error)
-      return null;
+      return null
     }
   }
   async getObjectDetailFromScript(page: Page) {
