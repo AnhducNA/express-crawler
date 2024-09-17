@@ -1,16 +1,25 @@
 import { SakukoService } from '@service/sakuko.service'
 import * as cron from 'node-cron'
-import Container from 'typedi';
+import Container from 'typedi'
 
 export const scheduleCronJobs = () => {
+  const sakukoService = Container.get(SakukoService)
 
-  const sakukoService = Container.get(SakukoService);
-
-
-  cron.schedule('15 12,22 * * *', async () => {
-    console.log('Running scrapeData at 12:15 and 22:15 everyday')
-    await sakukoService.scrapeData()
+  cron.schedule('15 4 * * *', async () => {
+    console.log('Running scrapeData at 5:15 everyday')
+    const category = {
+      name: 'nha-cua-doi-song',
+      url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+    }
+    await sakukoService.scrapeDataInCategory(category)
   })
 
-  console.log('Cron job scheduled to run at 12:15 and 22:15 everyday')
+  cron.schedule('15 22 * * *', async () => {
+    console.log('Running scrapeData at 5:15 everyday')
+    const category = {
+      name: 'cham-soc-sac-dep',
+      url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
 }

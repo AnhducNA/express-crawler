@@ -47,7 +47,7 @@ export class UserController {
 
   @Get()
   async getAllProduct(@Res() res: Response) {
-    const data = await this.sakukoService.scrapeData()
+    const data = await this.sakukoService.scrapeAllData()
     return data
   }
 }

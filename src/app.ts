@@ -14,7 +14,6 @@ import DB from './config/database.config'
 class App {
   public app: express.Application = express()
   public port: string | number
-  private sakukoService: SakukoService
 
   constructor() {
     this.port = PORT || 3000

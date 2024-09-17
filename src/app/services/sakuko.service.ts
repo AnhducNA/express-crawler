@@ -4,26 +4,25 @@ import fs from 'fs'
 import reader from 'xlsx'
 import { ChatXService } from './chatx.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
-import { chatxToken } from 'src/config/env.config'
 
 @Service()
 export class SakukoService {
   constructor(protected chatxService: ChatXService) {}
 
-  async scrapeData() {
+  async scrapeAllData() {
     const categories = [
       // {
       //   name: 'set-qua-trung-thu-2024',
       //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
       // },
-      // {
-      //   name: 'sua-cho-be',
-      //   url: 'https://sakukostore.com.vn/collections/sua-cho-be',
-      // },
       {
-        name: 'me-be',
-        url: 'https://sakukostore.com.vn/collections/me-be',
+        name: 'sua-cho-be',
+        url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
+      // {
+      //   name: 'me-be',
+      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      // },
       // {
       //   name: 'cham-soc-sac-dep',
       //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
@@ -36,25 +35,32 @@ export class SakukoService {
       //   name: 'thuc-pham',
       //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
       // },
-      // {
-      //   name: 'nha-cua-doi-song',
-      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      // },
+      {
+        name: 'nha-cua-doi-song',
+        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      },
     ]
 
     const productData = []
     for (const category of categories) {
       const listProduct = await this.scrapeListProductPage(category.url)
       productData.push(...listProduct)
-      this.exportJsonFile(listProduct, category.name)
-      this.exportExcelFile(listProduct, category.name)
+      // this.exportJsonFile(listProduct, category.name)
+      // this.exportExcelFile(listProduct, category.name)
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
     console.log('================Completed===================')
 
-    this.exportJsonFile(productData, 'product')
-    this.exportExcelFile(productData, 'all')
+    // this.exportJsonFile(productData, 'product')
+    // this.exportExcelFile(productData, 'all')
+    return productData
+  }
+  async scrapeDataInCategory(category: { name: string; url: string }) {
+    const productData = []
+    const listProduct = await this.scrapeListProductPage(category.url)
+    productData.push(...listProduct)
+    console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     return productData
   }
 
@@ -89,12 +95,36 @@ export class SakukoService {
         })
       } catch (error) {}
 
+      // try {
+      //   console.log(`Access browser detail product: ` + urls[1])
+      //   const currentPageData = await this.pageDetailPromise(urls[1])
+      //   if (currentPageData.id) {
+      //     scrapedData.push({
+      //       id: currentPageData.id,
+      //       title: currentPageData.title,
+      //       type: currentPageData.type,
+      //     })
+      //     await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+      //     console.log(`Detail product: `, {
+      //       id: currentPageData.id,
+      //       title: currentPageData.title,
+      //     })
+      //   }
+      // } catch (error) {
+      //   console.error(`Error accessing detail product at ${urls[1]}:`, error)
+      // }
+
       for (const link of urls) {
         try {
+          console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
           console.log(`Access browser detail product: ` + link)
           const currentPageData = await this.pageDetailPromise(link)
           if (currentPageData.id) {
-            scrapedData.push(currentPageData)
+            scrapedData.push({
+              id: currentPageData.id,
+              title: currentPageData.title,
+              type: currentPageData.type,
+            })
             await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
             console.log(`Detail product: `, {
               id: currentPageData.id,
@@ -106,24 +136,27 @@ export class SakukoService {
         }
       }
 
-      // await Promise.all(
-      //   urls.map(async (link, index) => {
-      //     try {
-      //       console.log(`Access browser detail product ${index + 1}: ` + link)
-      //       const currentPageData = await this.pageDetailPromise(link)
-      //       if (currentPageData.id) {
-      //         scrapedData.push(currentPageData)
-      //         await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-      //         console.log(`Detail product ${index + 1}: `, {
-      //           id: currentPageData.id,
-      //           title: currentPageData.title,
-      //         })
-      //       }
-      //     } catch (error) {
-      //       console.error(`Error accessing detail product at ${link}:`, error)
+      // urls.forEach(async (link, index) => {
+      //   try {
+      //     console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
+      //     console.log(`Access browser detail product ${index}: ` + link)
+      //     const currentPageData = await this.pageDetailPromise(link)
+      //     if (currentPageData.id) {
+      // scrapedData.push({
+      //   id: currentPageData.id,
+      //   title: currentPageData.title,
+      //   type: currentPageData.type,
+      // })
+      //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
+      //       console.log(`Detail product: `, {
+      //         id: currentPageData.id,
+      //         title: currentPageData.title,
+      //       })
       //     }
-      //   }),
-      // )
+      //   } catch (error) {
+      //     console.error(`Error accessing detail product at ${link}:`, error)
+      //   }
+      // })
 
       let nextButtonExist = false
       try {
@@ -134,6 +167,7 @@ export class SakukoService {
       }
 
       if (nextButtonExist) {
+        scrapeCurrentNumPage++
         await page.click('#pagination li a i.fa-angle-double-right')
         return await scrapeCurrentPage()
       }

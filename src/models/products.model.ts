@@ -34,11 +34,11 @@ export default class ProductEntity extends Model<ProductEntity> {
   barcode: string
   @Column(DataType.STRING)
   featuredImage: string
-  @Column(DataType.STRING)
+  @Column(DataType.TEXT('medium'))
   images: string
   @Column(DataType.STRING)
   trademark: string
-  @Column(DataType.STRING)
+  @Column(DataType.TEXT('medium'))
   shortDescription: string
   @Column(DataType.NUMBER)
   price: number
@@ -46,7 +46,7 @@ export default class ProductEntity extends Model<ProductEntity> {
   originalPrice: number
   @Column(DataType.STRING)
   percentDiscount: string
-  @Column(DataType.STRING)
+  @Column(DataType.TEXT('long'))
   description: string
   @CreatedAt
   @Column
