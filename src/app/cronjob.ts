@@ -5,15 +5,6 @@ import Container from 'typedi'
 export const scheduleCronJobs = () => {
   const sakukoService = Container.get(SakukoService)
 
-  cron.schedule(' 30 00 * * *', async () => {
-    console.log('Running scrapeData at 0:30 everyday')
-    const category =  {
-      name: 'set-qua-trung-thu-2024', //16
-      url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-    }
-    await sakukoService.scrapeDataInCategory(category)
-  })
-  
   cron.schedule(' 00 00 * * *', async () => {
     console.log('Running scrapeData at 0:00 everyday')
     const category = {

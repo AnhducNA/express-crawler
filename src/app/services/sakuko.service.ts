@@ -1,5 +1,5 @@
 import { Service } from 'typedi'
-import puppeteer, { Page } from 'puppeteer'
+import puppeteer, { Browser, Page } from 'puppeteer'
 import fs from 'fs'
 import reader from 'xlsx'
 import { ChatXService } from './chatx.service'
@@ -11,42 +11,42 @@ export class SakukoService {
 
   async scrapeAllData() {
     const categories = [
-      {
-        name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181 
-        url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
-      },
-      {
-        name: 'set-qua-trung-thu-2024', //16
-        url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-      },
-      {
-        name: 'flash-sale-24h', //19
-        url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
-      },
+      // {
+      //   name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181
+      //   url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
+      // },
+      // {
+      //   name: 'set-qua-trung-thu-2024', //16
+      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+      // },
+      // {
+      //   name: 'flash-sale-24h', //19
+      //   url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
+      // },
       {
         name: 'sua-cho-be', // 9
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      {
-        name: 'me-be', //174
-        url: 'https://sakukostore.com.vn/collections/me-be',
-      },
-      {
-        name: 'cham-soc-sac-dep', //394
-        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      },
-      {
-        name: 'cham-soc-suc-khoe', //224
-        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      },
-      {
-        name: 'thuc-pham', // 539
-        url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      },
-      {
-        name: 'nha-cua-doi-song', // 516
-        url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      },
+      // {
+      //   name: 'me-be', //174
+      //   url: 'https://sakukostore.com.vn/collections/me-be',
+      // },
+      // {
+      //   name: 'cham-soc-sac-dep', //394
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      // },
+      // {
+      //   name: 'cham-soc-suc-khoe', //224
+      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      // },
+      // {
+      //   name: 'thuc-pham', // 539
+      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      // },
+      // {
+      //   name: 'nha-cua-doi-song', // 516
+      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
+      // },
     ]
 
     const productData = []
@@ -60,103 +60,113 @@ export class SakukoService {
     return productData
   }
   async scrapeDataInCategory(category: { name: string; url: string }) {
-    const productData = []
-    const listProduct = await this.scrapeListProductPage(category.url)
-    productData.push(...listProduct)
-    console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
+    const productData = await this.scrapeListProductPage(category.url)
+    console.log(`Total scrapedData of ${category.name}: `, productData.length)
     return productData
   }
 
-  async scrapeListProductPage(urlListProduct: string) {
+  async scrapeListProductPage(categoryLink: string) {
     const browser = await puppeteer.launch()
-    console.log('Opening the browser......')
-    const page = await browser.newPage()
+    console.log(`Opening the browser ${categoryLink} ......`)
+    const page: Page = await browser.newPage()
     try {
-      await page.goto(urlListProduct, {
+      await page.goto(categoryLink, {
         waitUntil: 'networkidle0',
       })
     } catch (error) {
-      console.error('Error opening product list page:', error)
+      console.error('Error opening category page:', error)
       return []
     }
 
-    const scrapedData = []
-    let scrapeCurrentNumPage = 1
-    const scrapeCurrentPage = async () => {
-      console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
-      let urls = []
-      try {
-        await page.waitForSelector('.wraplist-collection')
-        urls = await page.$$eval('.product-loop', (elements) => {
-          // Extract the links from the data
-          const links = elements.map(
-            (el) =>
-              'https://sakukostore.com.vn' +
-              el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
-          )
-          return links
-        })
-      } catch (error) {}
-
-      // try {
-      //   console.log(`Access browser detail product: ` + urls[1])
-      //   const currentPageData = await this.pageDetailPromise(urls[1])
-      //   if (currentPageData.id) {
-      //     scrapedData.push({
-      //       id: currentPageData.id,
-      //       title: currentPageData.title,
-      //       type: currentPageData.type,
-      //     })
-      //     await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-      //     console.log(`Detail product: `, {
-      //       id: currentPageData.id,
-      //       title: currentPageData.title,
-      //     })
-      //   }
-      // } catch (error) {
-      //   console.error(`Error accessing detail product at ${urls[1]}:`, error)
-      // }
-
-      for (const link of urls) {
-        try {
-          console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
-          console.log(`Access browser detail product: ` + link)
-          const currentPageData = await this.pageDetailPromise(link)
-          if (currentPageData.id) {
-            scrapedData.push({
-              id: currentPageData.id,
-              title: currentPageData.title,
-              type: currentPageData.type,
-            })
-            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-            console.log(`Detail product: `, {
-              id: currentPageData.id,
-              title: currentPageData.title,
-            })
-          }
-        } catch (error) {
-          console.error(`Error accessing detail product at ${link}:`, error)
-        }
-      }
-
-      let nextButtonExist = false
-      try {
-        await page.$eval('#pagination li a i.fa-angle-double-right', () => {})
-        nextButtonExist = true
-      } catch (err) {
-        nextButtonExist = false
-      }
-
-      if (nextButtonExist) {
-        scrapeCurrentNumPage++
-        await page.click('#pagination li a i.fa-angle-double-right')
-        return await scrapeCurrentPage()
-      }
-      await page.close()
-      await browser.close()
-      return scrapedData
+    const paginationLinks = await this.getPaginationLinks(page, categoryLink)
+    await page.close()
+    await browser.close()
+    const totalDataOfCategory = []
+    for (const paginationLink of paginationLinks) {
+      const scrapeCurrentPageData = await this.scrapeCurrentPage(paginationLink)
+      totalDataOfCategory.push(...scrapeCurrentPageData)
     }
-    return await scrapeCurrentPage()
+    return totalDataOfCategory
+  }
+  async getPaginationLinks(page: Page, categoryLink: string): Promise<string[]> {
+    let validMaxPage = 1
+    try {
+      validMaxPage = await page.$$eval('#pagination li a', (elements) => {
+        const validPages = elements
+          .map((e) => {
+            return +e.textContent
+          })
+          .filter((pageNum: number) => {
+            return pageNum > 0 && pageNum !== null
+          })
+        if (!validPages || validPages.length === 0) {
+          return 1
+        }
+        return Math.max(...validPages)
+      })
+    } catch (error) {
+      validMaxPage = 1
+    }
+    const paginationLinks: string[] = []
+    for (let page = 1; page <= validMaxPage; page++) {
+      paginationLinks.push(categoryLink + '?page=' + page)
+    }
+    return paginationLinks
+  }
+
+  async scrapeCurrentPage(paginationLink: string) {
+    const browser: Browser = await puppeteer.launch()
+    console.log(`Accessing the page: ${paginationLink}`)
+    const page: Page = await browser.newPage()
+    try {
+      await page.goto(paginationLink, {
+        waitUntil: 'networkidle0',
+      })
+    } catch (error) {
+      console.error('Error opening category page:', error)
+      return []
+    }
+    let urls = []
+    try {
+      await page.waitForSelector('.wraplist-collection')
+      urls = await page.$$eval('.product-loop', (elements) => {
+        // Extract the links from the data
+        const links = elements.map(
+          (el) =>
+            'https://sakukostore.com.vn' +
+            el.querySelector('.proloop-detail > h3 > a.quickview-product').getAttribute('href'),
+        )
+        return links
+      })
+    } catch (error) {
+      urls = []
+    }
+
+    const currentPageTotalData: { id: number; title: string; type: string }[] = []
+    for (const link of urls) {
+      try {
+        console.log(`Accessing the page: ${paginationLink}`)
+        console.log(`Access browser detail product: ` + link)
+        const detailData = await this.pageDetailPromise(link)
+        if (detailData.id) {
+          currentPageTotalData.push({
+            id: detailData.id,
+            title: detailData.title,
+            type: detailData.type,
+          })
+          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+          console.log(`Detail product: `, {
+            id: detailData.id,
+            title: detailData.title,
+          })
+        }
+      } catch (error) {
+        console.error(`Error accessing detail product at ${link}:`, error)
+      }
+    }
+    await page.close()
+    await browser.close()
+    return currentPageTotalData
   }
 
   async pageDetailPromise(link: string): Promise<IProduct> {
@@ -170,6 +180,7 @@ export class SakukoService {
         timeout: 0,
       })
       const dataObject = await this.getObjectDetailFromScript(page)
+      await page.close()
       await browser.close()
 
       // Handle the case if no product data was found

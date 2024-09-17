@@ -1,6 +1,6 @@
 import { SakukoEventService } from '@service/sakuko-event.service'
 import { SakukoService } from '@service/sakuko.service'
-import { Get, JsonController, Res } from 'routing-controllers'
+import { Body, Get, JsonController, QueryParams, Res } from 'routing-controllers'
 import { Service } from 'typedi'
 import reader from 'xlsx'
 
@@ -42,6 +42,15 @@ export class UserController {
   @Get('/autumn-festival')
   async midAutumnFestivalGifts(@Res() res: Response) {
     const data = await this.sakukoEventService.getMidAutumnFestivalGifts()
+    return data
+  }
+
+  @Get('/by-category')
+  async getAllProductOfCategory(
+    @QueryParams() queryParams: { name: string; url: string },
+    @Res() res: Response,
+  ) {
+    const data = await this.sakukoService.scrapeDataInCategory(queryParams)
     return data
   }
 

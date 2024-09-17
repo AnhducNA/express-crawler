@@ -8,7 +8,6 @@ import { useContainer, useExpressServer } from 'routing-controllers'
 import { Container } from 'typedi'
 import path from 'path'
 import { PORT } from './config/env.config'
-import { SakukoService } from '@service/sakuko.service'
 import DB from './config/database.config'
 import { scheduleCronJobs } from './app/cronjob'
 
