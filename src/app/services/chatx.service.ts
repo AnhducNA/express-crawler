@@ -1,6 +1,6 @@
 import { ProductDto } from '@dtos/sakuko.dto'
 import axios from 'axios'
-import { chatx, chatxToken } from 'src/config/env.config'
+import { chatx } from 'src/config/env.config'
 import { Service } from 'typedi'
 import { ProductService } from './product.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
@@ -98,6 +98,10 @@ export class ChatXService {
     documentId: string,
     segmentParams: ProductDto,
   ) {
+    console.log(
+      'Axios call api create segment: ' +
+        `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments`,
+    )
     return await axios
       .post(
         `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments`,
@@ -133,70 +137,10 @@ export class ChatXService {
     segmentParams: ProductDto,
     segmentIdInChatx: string,
   ) {
-    return await axios
-      .post(
+    console.log(
+      'Axios call api update segment: ' +
         `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments/${segmentIdInChatx}`,
-        {
-          segments: [
-            {
-              answer: 1,
-              content: JSON.stringify(segmentParams),
-              keywords: [
-                segmentParams.type,
-                segmentParams.sku,
-                segmentParams.trademark,
-                segmentParams.barcode,
-              ],
-            },
-          ],
-        },
-        {
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        },
-      )
-      .then((res) => {
-        return res.data.data
-      })
-      .catch((e) => {
-        console.log(e.message, e.code)
-      })
-  }
-  async createOrUpdateSegment(
-    token: string,
-    datasetId: string,
-    documentId: string,
-    segmentParams: ProductDto,
-    segmentIdInChatx?: string,
-  ) {
-    if (!segmentIdInChatx) {
-      return await axios
-        .post(
-          `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments`,
-          {
-            segments: [
-              {
-                answer: 1,
-                content: JSON.stringify(segmentParams),
-                keywords: [
-                  segmentParams.type,
-                  segmentParams.sku,
-                  segmentParams.trademark,
-                  segmentParams.barcode,
-                ],
-              },
-            ],
-          },
-          {
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          },
-        )
-        .then((res) => {
-          return res.data.data
-        })
-        .catch((e) => {
-          console.log(e.message, e.code)
-        })
-    }
+    )
     return await axios
       .post(
         `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments/${segmentIdInChatx}`,

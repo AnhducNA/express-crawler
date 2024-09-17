@@ -5,21 +5,95 @@ import Container from 'typedi'
 export const scheduleCronJobs = () => {
   const sakukoService = Container.get(SakukoService)
 
-  cron.schedule('15 4 * * *', async () => {
-    console.log('Running scrapeData at 5:15 everyday')
+  cron.schedule(' 30 00 * * *', async () => {
+    console.log('Running scrapeData at 0:30 everyday')
+    const category =  {
+      name: 'set-qua-trung-thu-2024', //16
+      url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+  
+  cron.schedule(' 00 00 * * *', async () => {
+    console.log('Running scrapeData at 0:00 everyday')
     const category = {
-      name: 'nha-cua-doi-song',
+      name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181 
+      url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 30 00 * * *', async () => {
+    console.log('Running scrapeData at 0:30 everyday')
+    const category =  {
+      name: 'set-qua-trung-thu-2024', //16
+      url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 40 00 * * *', async () => {
+    console.log('Running scrapeData at 0:40 everyday')
+    const category = {
+      name: 'flash-sale-24h', //19
+      url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 50 00 * * *', async () => {
+    console.log('Running scrapeData at 0:50 everyday')
+    const category = {
+      name: 'sua-cho-be', // 9
+      url: 'https://sakukostore.com.vn/collections/sua-cho-be',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 00 01 * * *', async () => {
+    console.log('Running scrapeData at 1:00 everyday')
+    const category = {
+      name: 'me-be', //174
+      url: 'https://sakukostore.com.vn/collections/me-be',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 45 01 * * *', async () => {
+    console.log('Running scrapeData everyday')
+    const category = {
+      name: 'cham-soc-sac-dep', //394
+      url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 30 02 * * *', async () => {
+    console.log('Running scrapeData at 0:00 everyday')
+    const category = {
+      name: 'cham-soc-suc-khoe', //224
+      url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 30 03 * * *', async () => {
+    console.log('Running scrapeData at 0:00 everyday')
+    const category = {
+      name: 'thuc-pham', // 539
+      url: 'https://sakukostore.com.vn/collections/thuc-pham',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
+
+  cron.schedule(' 30 5 * * *', async () => {
+    console.log('Running scrapeData at 4:30 everyday')
+    const category = {
+      name: 'nha-cua-doi-song', // 516
       url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
     }
     await sakukoService.scrapeDataInCategory(category)
   })
 
-  cron.schedule('15 22 * * *', async () => {
-    console.log('Running scrapeData at 5:15 everyday')
-    const category = {
-      name: 'cham-soc-sac-dep',
-      url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-    }
-    await sakukoService.scrapeDataInCategory(category)
-  })
+
 }

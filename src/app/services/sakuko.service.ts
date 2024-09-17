@@ -11,32 +11,40 @@ export class SakukoService {
 
   async scrapeAllData() {
     const categories = [
-      // {
-      //   name: 'set-qua-trung-thu-2024',
-      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-      // },
       {
-        name: 'sua-cho-be',
+        name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181 
+        url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
+      },
+      {
+        name: 'set-qua-trung-thu-2024', //16
+        url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
+      },
+      {
+        name: 'flash-sale-24h', //19
+        url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
+      },
+      {
+        name: 'sua-cho-be', // 9
         url: 'https://sakukostore.com.vn/collections/sua-cho-be',
       },
-      // {
-      //   name: 'me-be',
-      //   url: 'https://sakukostore.com.vn/collections/me-be',
-      // },
-      // {
-      //   name: 'cham-soc-sac-dep',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      // },
-      // {
-      //   name: 'cham-soc-suc-khoe',
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      // },
-      // {
-      //   name: 'thuc-pham',
-      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      // },
       {
-        name: 'nha-cua-doi-song',
+        name: 'me-be', //174
+        url: 'https://sakukostore.com.vn/collections/me-be',
+      },
+      {
+        name: 'cham-soc-sac-dep', //394
+        url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
+      },
+      {
+        name: 'cham-soc-suc-khoe', //224
+        url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
+      },
+      {
+        name: 'thuc-pham', // 539
+        url: 'https://sakukostore.com.vn/collections/thuc-pham',
+      },
+      {
+        name: 'nha-cua-doi-song', // 516
         url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
       },
     ]
@@ -45,15 +53,10 @@ export class SakukoService {
     for (const category of categories) {
       const listProduct = await this.scrapeListProductPage(category.url)
       productData.push(...listProduct)
-      // this.exportJsonFile(listProduct, category.name)
-      // this.exportExcelFile(listProduct, category.name)
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
     console.log('================Completed===================')
-
-    // this.exportJsonFile(productData, 'product')
-    // this.exportExcelFile(productData, 'all')
     return productData
   }
   async scrapeDataInCategory(category: { name: string; url: string }) {
@@ -136,28 +139,6 @@ export class SakukoService {
         }
       }
 
-      // urls.forEach(async (link, index) => {
-      //   try {
-      //     console.log(`Access page ${scrapeCurrentNumPage} of ${urlListProduct}`)
-      //     console.log(`Access browser detail product ${index}: ` + link)
-      //     const currentPageData = await this.pageDetailPromise(link)
-      //     if (currentPageData.id) {
-      // scrapedData.push({
-      //   id: currentPageData.id,
-      //   title: currentPageData.title,
-      //   type: currentPageData.type,
-      // })
-      //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(currentPageData)
-      //       console.log(`Detail product: `, {
-      //         id: currentPageData.id,
-      //         title: currentPageData.title,
-      //       })
-      //     }
-      //   } catch (error) {
-      //     console.error(`Error accessing detail product at ${link}:`, error)
-      //   }
-      // })
-
       let nextButtonExist = false
       try {
         await page.$eval('#pagination li a i.fa-angle-double-right', () => {})
@@ -186,7 +167,7 @@ export class SakukoService {
       // Navigate to the URL
       await page.goto(link, {
         waitUntil: 'domcontentloaded',
-        timeout: 50000,
+        timeout: 0,
       })
       const dataObject = await this.getObjectDetailFromScript(page)
       await browser.close()
