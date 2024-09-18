@@ -3,6 +3,7 @@ export interface IProduct {
   url: string
   title: string
   type: string
+  categoryType?: string
   inventoryQuantity: number
   inventoryPolicy: string
   sku: string

@@ -24,6 +24,8 @@ export default class ProductEntity extends Model<ProductEntity> {
   title: string
   @Column(DataType.STRING)
   type: string
+  @Column(DataType.STRING)
+  categoryType: string
   @Column(DataType.NUMBER)
   inventoryQuantity: number
   @Column(DataType.STRING)

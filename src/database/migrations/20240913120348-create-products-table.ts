@@ -27,6 +27,11 @@ module.exports = {
         field: 'type',
         allowNull: true,
       },
+      categoryType: {
+        type: Sequelize.STRING(255),
+        field: 'category_type',
+        allowNull: true,
+      },
       inventoryQuantity: {
         type: Sequelize.INTEGER,
         field: 'inventory_quantity',

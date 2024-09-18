@@ -1,57 +1,21 @@
 import { Service } from 'typedi'
-import puppeteer, { Browser, Page } from 'puppeteer'
+import puppeteer, { Browser, LaunchOptions, Page } from 'puppeteer'
 import fs from 'fs'
 import reader from 'xlsx'
 import { ChatXService } from './chatx.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
+import productCategoryData from 'src/data/product-category.data'
 
 @Service()
 export class SakukoService {
   constructor(protected chatxService: ChatXService) {}
 
   async scrapeAllData() {
-    const categories = [
-      // {
-      //   name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181
-      //   url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
-      // },
-      // {
-      //   name: 'set-qua-trung-thu-2024', //16
-      //   url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-      // },
-      // {
-      //   name: 'flash-sale-24h', //19
-      //   url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
-      // },
-      {
-        name: 'sua-cho-be', // 9
-        url: 'https://sakukostore.com.vn/collections/sua-cho-be',
-      },
-      // {
-      //   name: 'me-be', //174
-      //   url: 'https://sakukostore.com.vn/collections/me-be',
-      // },
-      // {
-      //   name: 'cham-soc-sac-dep', //394
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-sac-dep',
-      // },
-      // {
-      //   name: 'cham-soc-suc-khoe', //224
-      //   url: 'https://sakukostore.com.vn/collections/cham-soc-suc-khoe',
-      // },
-      // {
-      //   name: 'thuc-pham', // 539
-      //   url: 'https://sakukostore.com.vn/collections/thuc-pham',
-      // },
-      // {
-      //   name: 'nha-cua-doi-song', // 516
-      //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
-      // },
-    ]
+    const categories: { name: string; url: string }[] = productCategoryData
 
     const productData = []
     for (const category of categories) {
-      const listProduct = await this.scrapeListProductPage(category.url)
+      const listProduct = await this.scrapeListProductPage(category)
       productData.push(...listProduct)
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
@@ -60,34 +24,37 @@ export class SakukoService {
     return productData
   }
   async scrapeDataInCategory(category: { name: string; url: string }) {
-    const productData = await this.scrapeListProductPage(category.url)
+    const productData = await this.scrapeListProductPage(category)
     console.log(`Total scrapedData of ${category.name}: `, productData.length)
     return productData
   }
 
-  async scrapeListProductPage(categoryLink: string) {
-    const browser = await puppeteer.launch()
-    console.log(`Opening the browser ${categoryLink} ......`)
+  async scrapeListProductPage(category: { name: string; url: string }) {
+    const browser = await puppeteer.launch({
+      ignoreHTTPSErrors: true, // Ignore SSL certificate errors
+      headless: false,
+    })
+    console.log(`Opening the browser ${category.url} ......`)
     const page: Page = await browser.newPage()
     try {
-      await page.goto(categoryLink, {
+      await page.goto(category.url, {
         waitUntil: 'networkidle0',
       })
     } catch (error) {
-      console.error('Error opening category page:', error)
+      console.error('Error opening category browser:', error)
       return []
     }
-
-    const paginationLinks = await this.getPaginationLinks(page, categoryLink)
+    const paginationLinks = await this.getPaginationLinks(page, category.url)
     await page.close()
     await browser.close()
     const totalDataOfCategory = []
     for (const paginationLink of paginationLinks) {
-      const scrapeCurrentPageData = await this.scrapeCurrentPage(paginationLink)
+      const scrapeCurrentPageData = await this.scrapeCurrentPage(paginationLink, category.name)
       totalDataOfCategory.push(...scrapeCurrentPageData)
     }
     return totalDataOfCategory
   }
+
   async getPaginationLinks(page: Page, categoryLink: string): Promise<string[]> {
     let validMaxPage = 1
     try {
@@ -114,13 +81,14 @@ export class SakukoService {
     return paginationLinks
   }
 
-  async scrapeCurrentPage(paginationLink: string) {
+  async scrapeCurrentPage(paginationLink: string, categoryType: string) {
     const browser: Browser = await puppeteer.launch()
     console.log(`Accessing the page: ${paginationLink}`)
     const page: Page = await browser.newPage()
     try {
       await page.goto(paginationLink, {
-        waitUntil: 'networkidle0',
+        waitUntil: 'networkidle2',
+        timeout: 0,
       })
     } catch (error) {
       console.error('Error opening category page:', error)
@@ -143,27 +111,50 @@ export class SakukoService {
     }
 
     const currentPageTotalData: { id: number; title: string; type: string }[] = []
-    for (const link of urls) {
-      try {
-        console.log(`Accessing the page: ${paginationLink}`)
-        console.log(`Access browser detail product: ` + link)
-        const detailData = await this.pageDetailPromise(link)
-        if (detailData.id) {
-          currentPageTotalData.push({
-            id: detailData.id,
-            title: detailData.title,
-            type: detailData.type,
-          })
-          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-          console.log(`Detail product: `, {
-            id: detailData.id,
-            title: detailData.title,
-          })
-        }
-      } catch (error) {
-        console.error(`Error accessing detail product at ${link}:`, error)
+    try {
+      console.log(`Accessing the page: ${paginationLink}`)
+      console.log(`Access browser detail product: ` + urls[1])
+      const detailData = await this.pageDetailPromise(urls[1])
+      if (detailData.id) {
+        currentPageTotalData.push({
+          id: detailData.id,
+          title: detailData.title,
+          type: detailData.type,
+        })
+        await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(
+          detailData,
+          categoryType,
+        )
+        console.log(`Detail product: `, {
+          id: detailData.id,
+          title: detailData.title,
+        })
       }
+    } catch (error) {
+      console.error(`Error accessing detail product at ${urls[1]}:`, error)
     }
+
+    // for (const link of urls) {
+    //   try {
+    //     console.log(`Accessing the page: ${paginationLink}`)
+    //     console.log(`Access browser detail product: ` + link)
+    //     const detailData = await this.pageDetailPromise(link)
+    //     if (detailData.id) {
+    //       currentPageTotalData.push({
+    //         id: detailData.id,
+    //         title: detailData.title,
+    //         type: detailData.type,
+    //       })
+    //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+    //       console.log(`Detail product: `, {
+    //         id: detailData.id,
+    //         title: detailData.title,
+    //       })
+    //     }
+    //   } catch (error) {
+    //     console.error(`Error accessing detail product at ${link}:`, error)
+    //   }
+    // }
     await page.close()
     await browser.close()
     return currentPageTotalData
@@ -215,6 +206,7 @@ export class SakukoService {
       return null
     }
   }
+
   async getObjectDetailFromScript(page: Page) {
     return await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'))

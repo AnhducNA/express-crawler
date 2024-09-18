@@ -66,8 +66,9 @@ export class ChatXService {
       })
   }
 
-  async createOrUpdateSegmentsWithDatabaseToProduct(segmentParams: IProduct) {
+  async createOrUpdateSegmentsWithDatabaseToProduct(segmentParams: IProduct, categoryType: string) {
     try {
+      segmentParams.categoryType = categoryType
       await this.productService.createOrUpdate(segmentParams)
       const productInDB = await this.productService.getChatxIdByOne(segmentParams.id)
       if (productInDB.chatxId) {
@@ -134,7 +135,7 @@ export class ChatXService {
     token: string,
     datasetId: string,
     documentId: string,
-    segmentParams: ProductDto,
+    segmentParams: IProduct,
     segmentIdInChatx: string,
   ) {
     console.log(
@@ -145,18 +146,10 @@ export class ChatXService {
       .post(
         `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments/${segmentIdInChatx}`,
         {
-          segments: [
-            {
-              answer: 1,
-              content: JSON.stringify(segmentParams),
-              keywords: [
-                segmentParams.type,
-                segmentParams.sku,
-                segmentParams.trademark,
-                segmentParams.barcode,
-              ],
-            },
-          ],
+          segment: {
+            content: JSON.stringify(segmentParams),
+            enabled: true,
+          },
         },
         {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
