@@ -13,8 +13,7 @@ export class SakukoService {
   constructor(protected chatxService: ChatXService) {}
 
   async scrapeAllData() {
-    const categories: { name: string; url: string }[] = productCategoryData
-
+    const categories: { name: string; url: string; startPage?: number }[] = productCategoryData
     const productData = []
     for (const category of categories) {
       const listProduct = await this.scrapeListProductPage(category)
@@ -25,13 +24,14 @@ export class SakukoService {
     console.log('================Completed===================')
     return productData
   }
-  async scrapeDataInCategory(category: { name: string; url: string }) {
+
+  async scrapeDataInCategory(category: { name: string; url: string; startPage?: number }) {
     const productData = await this.scrapeListProductPage(category)
     console.log(`Total scrapedData of ${category.name}: `, productData.length)
     return productData
   }
 
-  async scrapeListProductPage(category: { name: string; url: string }) {
+  async scrapeListProductPage(category: { name: string; url: string; startPage?: number }) {
     const browser = await puppeteer.launch({
       ignoreHTTPSErrors: true, // Ignore SSL certificate errors
       headless: false,
@@ -46,7 +46,9 @@ export class SakukoService {
       console.error('Error opening category browser:', error)
       return []
     }
-    const paginationLinks = await this.getPaginationLinks(page, category.url)
+    const paginationLinks = await this.getPaginationLinks(page, category.url, category.startPage)
+    console.log("paginationLinks: ", paginationLinks)
+
     await page.close()
     await browser.close()
     const totalDataOfCategory = []
@@ -60,8 +62,13 @@ export class SakukoService {
     return totalDataOfCategory
   }
 
-  async getPaginationLinks(page: Page, categoryLink: string): Promise<string[]> {
+  async getPaginationLinks(
+    page: Page,
+    categoryLink: string,
+    startPage?: number,
+  ): Promise<string[]> {
     let validMaxPage = 1
+    startPage = startPage ? startPage : 1
     try {
       validMaxPage = await page.$$eval('#pagination li a', (elements) => {
         const validPages = elements
@@ -80,7 +87,7 @@ export class SakukoService {
       validMaxPage = 1
     }
     const paginationLinks: string[] = []
-    for (let page = 1; page <= validMaxPage; page++) {
+    for (let page = startPage; page <= validMaxPage; page++) {
       paginationLinks.push(categoryLink + '?page=' + page)
     }
     return paginationLinks
@@ -115,57 +122,57 @@ export class SakukoService {
       urls = []
     }
     const currentPageTotalData: { id: number; title: string; type: string }[] = []
-    try {
-      console.log(`Accessing the page: ${paginationLink}`)
-      console.log(`Access browser detail product: ` + urls[0])
-      const detailData = await this.pageDetailPromise(urls[0])
-      if (detailData.id) {
-        currentPageTotalData.push({
-          id: detailData.id,
-          title: detailData.title,
-          type: detailData.type,
-        })
-        detailData.categoryType = categoryType
-        try {
-          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-          console.log(`Detail product: `, {
-            id: detailData.id,
-            title: detailData.title,
-          })
-        } catch (error) {
-          throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
-        }
-      }
-    } catch (error) {
-      throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
-    }
-
-    // for (const link of urls) {
-    //   try {
-    //     console.log(`Accessing the page: ${paginationLink}`)
-    //     console.log(`Access browser detail product: ` + link)
-    //     const detailData = await this.pageDetailPromise(link)
-    //     if (detailData.id) {
-    //       currentPageTotalData.push({
+    // try {
+    //   console.log(`Accessing the page: ${paginationLink}`)
+    //   console.log(`Access browser detail product: ` + urls[0])
+    //   const detailData = await this.pageDetailPromise(urls[0])
+    //   if (detailData.id) {
+    //     currentPageTotalData.push({
+    //       id: detailData.id,
+    //       title: detailData.title,
+    //       type: detailData.type,
+    //     })
+    //     detailData.categoryType = categoryType
+    //     try {
+    //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+    //       console.log(`Detail product: `, {
     //         id: detailData.id,
     //         title: detailData.title,
-    //         type: detailData.type,
     //       })
-    //       detailData.categoryType = categoryType
-    //       try {
-    //         await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-    //         console.log(`Detail product: `, {
-    //           id: detailData.id,
-    //           title: detailData.title,
-    //         })
-    //       } catch (error) {
-    //         throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
-    //       }
+    //     } catch (error) {
+    //       throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
     //     }
-    //   } catch (error) {
-    //     throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
     //   }
+    // } catch (error) {
+    //   throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
     // }
+
+    for (const link of urls) {
+      try {
+        console.log(`Accessing the page: ${paginationLink}`)
+        console.log(`Access browser detail product: ` + link)
+        const detailData = await this.pageDetailPromise(link)
+        if (detailData.id) {
+          currentPageTotalData.push({
+            id: detailData.id,
+            title: detailData.title,
+            type: detailData.type,
+          })
+          detailData.categoryType = categoryType
+          try {
+            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+            console.log(`Detail product: `, {
+              id: detailData.id,
+              title: detailData.title,
+            })
+          } catch (error) {
+            throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
+          }
+        }
+      } catch (error) {
+        throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
+      }
+    }
 
     await page.close()
     await browser.close()

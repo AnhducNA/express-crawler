@@ -89,7 +89,7 @@ export const scheduleCronJobs = () => {
   cron.schedule(' 30 5 * * *', async () => {
     console.log('Running scrapeData at 5:30 everyday')
     const category = {
-      name: 'hang-order', // 546 => saved 544 => miss 2
+      name: 'hang-order', // 546
       url: 'https://sakukostore.com.vn/collections/hang-order',
     }
     await sakukoService.scrapeDataInCategory(category)
