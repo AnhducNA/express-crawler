@@ -4,6 +4,8 @@ import { chatx } from 'src/config/env.config'
 import { Service } from 'typedi'
 import { ProductService } from './product.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
+import { BadRequestError } from 'routing-controllers'
+import { HttpException } from '@exceptions/http.exception'
 
 @Service()
 export class ChatXService {
@@ -66,9 +68,8 @@ export class ChatXService {
       })
   }
 
-  async createOrUpdateSegmentsWithDatabaseToProduct(segmentParams: IProduct, categoryType: string) {
+  async createOrUpdateSegmentsWithDatabaseToProduct(segmentParams: IProduct) {
     try {
-      segmentParams.categoryType = categoryType
       await this.productService.createOrUpdate(segmentParams)
       const productInDB = await this.productService.getChatxIdByOne(segmentParams.id)
       if (productInDB.chatxId) {
@@ -86,10 +87,10 @@ export class ChatXService {
         chatx.document,
         segmentParams,
       )
+      if (!segmentNew) return
       return await this.productService.updateChatxId(productInDB.id, segmentNew.id)
     } catch (error) {
-      console.log(error.message)
-      return
+      throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct 1234654')
     }
   }
 
@@ -128,9 +129,17 @@ export class ChatXService {
         return res.data.data[0]
       })
       .catch((e) => {
-        console.log(e.message, e.code)
+        console.log(`Error axios create segment with code: ${e.code}: ` + e)
+        switch (e.code) {
+          case 'CERT_HAS_EXPIRED':
+          case 400:
+            return
+          default:
+            throw new BadRequestError('Error axios createSegment')
+        }
       })
   }
+
   async updateSegment(
     token: string,
     datasetId: string,
@@ -148,6 +157,7 @@ export class ChatXService {
         {
           segment: {
             content: JSON.stringify(segmentParams),
+            answer: '1',
             enabled: true,
           },
         },
@@ -159,7 +169,14 @@ export class ChatXService {
         return res.data.data
       })
       .catch((e) => {
-        console.log(e.message, e.code)
+        console.log(`Error axios update segment with code: ${e.code}: ` + e)
+        switch (e.code) {
+          case 'CERT_HAS_EXPIRED':
+          case 400:
+            return
+          default:
+            throw new BadRequestError('Error axios updateSegment')
+        }
       })
   }
 }

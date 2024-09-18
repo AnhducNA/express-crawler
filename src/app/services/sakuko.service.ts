@@ -1,10 +1,12 @@
 import { Service } from 'typedi'
-import puppeteer, { Browser, LaunchOptions, Page } from 'puppeteer'
+import puppeteer, { Browser, Page } from 'puppeteer'
 import fs from 'fs'
 import reader from 'xlsx'
 import { ChatXService } from './chatx.service'
 import { IProduct } from '@interfaces/sakuko.product.interface'
 import productCategoryData from 'src/data/product-category.data'
+import extractTextFromHTML from '@common/functions'
+import { BadRequestError } from 'routing-controllers'
 
 @Service()
 export class SakukoService {
@@ -33,12 +35,12 @@ export class SakukoService {
     const browser = await puppeteer.launch({
       ignoreHTTPSErrors: true, // Ignore SSL certificate errors
       headless: false,
-    })
+    } as any)
     console.log(`Opening the browser ${category.url} ......`)
     const page: Page = await browser.newPage()
     try {
       await page.goto(category.url, {
-        waitUntil: 'networkidle0',
+        waitUntil: 'domcontentloaded',
       })
     } catch (error) {
       console.error('Error opening category browser:', error)
@@ -50,6 +52,9 @@ export class SakukoService {
     const totalDataOfCategory = []
     for (const paginationLink of paginationLinks) {
       const scrapeCurrentPageData = await this.scrapeCurrentPage(paginationLink, category.name)
+      if (!scrapeCurrentPageData || scrapeCurrentPageData.length === 0) {
+        throw new BadRequestError()
+      }
       totalDataOfCategory.push(...scrapeCurrentPageData)
     }
     return totalDataOfCategory
@@ -109,29 +114,30 @@ export class SakukoService {
     } catch (error) {
       urls = []
     }
-
     const currentPageTotalData: { id: number; title: string; type: string }[] = []
     try {
       console.log(`Accessing the page: ${paginationLink}`)
-      console.log(`Access browser detail product: ` + urls[1])
-      const detailData = await this.pageDetailPromise(urls[1])
+      console.log(`Access browser detail product: ` + urls[0])
+      const detailData = await this.pageDetailPromise(urls[0])
       if (detailData.id) {
         currentPageTotalData.push({
           id: detailData.id,
           title: detailData.title,
           type: detailData.type,
         })
-        await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(
-          detailData,
-          categoryType,
-        )
-        console.log(`Detail product: `, {
-          id: detailData.id,
-          title: detailData.title,
-        })
+        detailData.categoryType = categoryType
+        try {
+          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+          console.log(`Detail product: `, {
+            id: detailData.id,
+            title: detailData.title,
+          })
+        } catch (error) {
+          throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
+        }
       }
     } catch (error) {
-      console.error(`Error accessing detail product at ${urls[1]}:`, error)
+      throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
     }
 
     // for (const link of urls) {
@@ -145,65 +151,66 @@ export class SakukoService {
     //         title: detailData.title,
     //         type: detailData.type,
     //       })
-    //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-    //       console.log(`Detail product: `, {
-    //         id: detailData.id,
-    //         title: detailData.title,
-    //       })
+    //       detailData.categoryType = categoryType
+    //       try {
+    //         await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+    //         console.log(`Detail product: `, {
+    //           id: detailData.id,
+    //           title: detailData.title,
+    //         })
+    //       } catch (error) {
+    //         throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
+    //       }
     //     }
     //   } catch (error) {
-    //     console.error(`Error accessing detail product at ${link}:`, error)
+    //     throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
     //   }
     // }
+
     await page.close()
     await browser.close()
     return currentPageTotalData
   }
 
   async pageDetailPromise(link: string): Promise<IProduct> {
-    try {
-      const browser = await puppeteer.launch({ headless: false })
-      // Open a new page / tab in the browser.
-      const page = await browser.newPage()
-      // Navigate to the URL
-      await page.goto(link, {
-        waitUntil: 'domcontentloaded',
-        timeout: 0,
-      })
-      const dataObject = await this.getObjectDetailFromScript(page)
-      await page.close()
-      await browser.close()
+    const browser = await puppeteer.launch({ headless: false })
+    // Open a new page / tab in the browser.
+    const page = await browser.newPage()
+    // Navigate to the URL
+    await page.goto(link, {
+      waitUntil: 'domcontentloaded',
+      timeout: 0,
+    })
+    const dataObject = await this.getObjectDetailFromScript(page)
+    await page.close()
+    await browser.close()
 
-      // Handle the case if no product data was found
-      if (dataObject) {
-        const percentDiscount = dataObject.compare_at_price
-          ? ((Number(dataObject.compare_at_price) - Number(dataObject.price)) /
-              Number(dataObject.compare_at_price)) *
-            100
+    // Handle the case if no product data was found
+    if (dataObject) {
+      const price = Number(String(dataObject.price).slice(0, -2))
+      const originalPrice = Number(String(dataObject.compare_at_price).slice(0, -2))
+      const percentDiscount =
+        originalPrice || originalPrice !== 0
+          ? ((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100
           : 0
-        return {
-          id: dataObject.id,
-          url: link,
-          title: dataObject.title,
-          type: dataObject.type,
-          inventoryQuantity: dataObject.variants[0].inventory_quantity,
-          inventoryPolicy: dataObject.variants[0].inventory_policy,
-          sku: dataObject.variants[0].sku,
-          barcode: dataObject.variants[0].barcode,
-          featuredImage: dataObject.featured_image,
-          images: Array(dataObject.images).toString(),
-          trademark: dataObject.vendor,
-          shortDescription: dataObject.metadescription,
-          price: dataObject.price,
-          originalPrice: dataObject.compare_at_price,
-          percentDiscount: percentDiscount + '%',
-          description: dataObject.description,
-        }
+      return {
+        id: dataObject.id,
+        url: link,
+        title: dataObject.title,
+        type: dataObject.type,
+        inventoryQuantity: dataObject.variants[0].inventory_quantity,
+        inventoryPolicy: dataObject.variants[0].inventory_policy,
+        sku: dataObject.variants[0].sku,
+        barcode: dataObject.variants[0].barcode,
+        featuredImage: dataObject.featured_image,
+        images: Array(dataObject.images).toString(),
+        trademark: dataObject.vendor,
+        shortDescription: dataObject.metadescription,
+        price: price,
+        originalPrice: originalPrice,
+        percentDiscount: percentDiscount + '%',
+        description: extractTextFromHTML(dataObject.description),
       }
-      return
-    } catch (error) {
-      console.log(error)
-      return null
     }
   }
 

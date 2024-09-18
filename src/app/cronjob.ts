@@ -8,7 +8,7 @@ export const scheduleCronJobs = () => {
   cron.schedule(' 00 00 * * *', async () => {
     console.log('Running scrapeData at 0:00 everyday')
     const category = {
-      name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181 
+      name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181
       url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
     }
     await sakukoService.scrapeDataInCategory(category)
@@ -16,7 +16,7 @@ export const scheduleCronJobs = () => {
 
   cron.schedule(' 30 00 * * *', async () => {
     console.log('Running scrapeData at 0:30 everyday')
-    const category =  {
+    const category = {
       name: 'set-qua-trung-thu-2024', //16
       url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
     }
@@ -77,7 +77,7 @@ export const scheduleCronJobs = () => {
     await sakukoService.scrapeDataInCategory(category)
   })
 
-  cron.schedule(' 30 5 * * *', async () => {
+  cron.schedule(' 30 4 * * *', async () => {
     console.log('Running scrapeData at 4:30 everyday')
     const category = {
       name: 'nha-cua-doi-song', // 516
@@ -86,5 +86,12 @@ export const scheduleCronJobs = () => {
     await sakukoService.scrapeDataInCategory(category)
   })
 
-
+  cron.schedule(' 30 5 * * *', async () => {
+    console.log('Running scrapeData at 5:30 everyday')
+    const category = {
+      name: 'hang-order', // 546 => saved 544 => miss 2
+      url: 'https://sakukostore.com.vn/collections/hang-order',
+    }
+    await sakukoService.scrapeDataInCategory(category)
+  })
 }
