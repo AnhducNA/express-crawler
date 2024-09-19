@@ -1,11 +1,18 @@
+import { SakukoCheckService } from '@service/sakuko-check.service'
 import { SakukoService } from '@service/sakuko.service'
 import * as cron from 'node-cron'
 import Container from 'typedi'
 
 export const scheduleCronJobs = () => {
   const sakukoService = Container.get(SakukoService)
+  const sakukoCheckService = Container.get(SakukoCheckService)
 
-  cron.schedule(' 00 00 * * *', async () => {
+  cron.schedule(' 00 0 * * *', async () => {
+    console.log('Running scrapeData at 0:00 everyday')
+    await sakukoCheckService.deleteChatxNotExitInMysql()
+  })
+
+  cron.schedule(' 10 00 * * *', async () => {
     console.log('Running scrapeData at 0:00 everyday')
     const category = {
       name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //181

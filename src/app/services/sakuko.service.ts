@@ -47,13 +47,13 @@ export class SakukoService {
       return []
     }
     const paginationLinks = await this.getPaginationLinks(page, category.url, category.startPage)
-    console.log("paginationLinks: ", paginationLinks)
+    console.log('paginationLinks: ', paginationLinks)
 
     await page.close()
     await browser.close()
     const totalDataOfCategory = []
     for (const paginationLink of paginationLinks) {
-      const scrapeCurrentPageData = await this.scrapeCurrentPage(paginationLink, category.name)
+      const scrapeCurrentPageData = await this.scrapePaginationPage(paginationLink, category.name)
       if (!scrapeCurrentPageData || scrapeCurrentPageData.length === 0) {
         throw new BadRequestError()
       }
@@ -93,7 +93,7 @@ export class SakukoService {
     return paginationLinks
   }
 
-  async scrapeCurrentPage(paginationLink: string, categoryType: string) {
+  async scrapePaginationPage(paginationLink: string, categoryType: string) {
     const browser: Browser = await puppeteer.launch()
     console.log(`Accessing the page: ${paginationLink}`)
     const page: Page = await browser.newPage()
@@ -122,58 +122,42 @@ export class SakukoService {
       urls = []
     }
     const currentPageTotalData: { id: number; title: string; type: string }[] = []
-    // try {
-    //   console.log(`Accessing the page: ${paginationLink}`)
-    //   console.log(`Access browser detail product: ` + urls[0])
-    //   const detailData = await this.pageDetailPromise(urls[0])
-    //   if (detailData.id) {
-    //     currentPageTotalData.push({
-    //       id: detailData.id,
-    //       title: detailData.title,
-    //       type: detailData.type,
-    //     })
-    //     detailData.categoryType = categoryType
-    //     try {
-    //       await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-    //       console.log(`Detail product: `, {
-    //         id: detailData.id,
-    //         title: detailData.title,
-    //       })
-    //     } catch (error) {
-    //       throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
-    //     }
-    //   }
-    // } catch (error) {
-    //   throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
-    // }
-
+    // urls = []
     for (const link of urls) {
-      try {
-        console.log(`Accessing the page: ${paginationLink}`)
-        console.log(`Access browser detail product: ` + link)
-        const detailData = await this.pageDetailPromise(link)
-        if (detailData.id) {
-          currentPageTotalData.push({
-            id: detailData.id,
-            title: detailData.title,
-            type: detailData.type,
-          })
-          detailData.categoryType = categoryType
-          try {
-            await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-            console.log(`Detail product: `, {
+      let numRunsCheckError = 0
+      LOOPERROR: do {
+        try {
+          console.log(`Accessing the page: ${paginationLink}`)
+          console.log(`Access browser detail product: ` + link)
+          const detailData = await this.pageDetailPromise(link)
+          if (detailData.id) {
+            currentPageTotalData.push({
               id: detailData.id,
               title: detailData.title,
+              type: detailData.type,
             })
-          } catch (error) {
-            throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
+            detailData.categoryType = categoryType
+            try {
+              await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+              console.log(`Detail product: `, {
+                id: detailData.id,
+                title: detailData.title,
+                price: detailData.price,
+              })
+            } catch (error) {
+              throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
+            }
           }
+          break LOOPERROR
+        } catch (error) {
+          numRunsCheckError++
+          if (numRunsCheckError >= 2) {
+            throw new BadRequestError(`Error accessing detail product at ${link}`)
+          }
+          continue LOOPERROR
         }
-      } catch (error) {
-        throw new BadRequestError(`Error accessing detail product at ${urls[0]}`)
-      }
+      } while (true)
     }
-
     await page.close()
     await browser.close()
     return currentPageTotalData
@@ -198,7 +182,9 @@ export class SakukoService {
       const originalPrice = Number(String(dataObject.compare_at_price).slice(0, -2))
       const percentDiscount =
         originalPrice || originalPrice !== 0
-          ? ((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100
+          ? Math.round(
+              ((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100,
+            ).toFixed(2)
           : 0
       return {
         id: dataObject.id,

@@ -158,6 +158,12 @@ export class ChatXService {
           segment: {
             content: JSON.stringify(segmentParams),
             answer: '1',
+            keywords: [
+              segmentParams.type,
+              segmentParams.sku,
+              segmentParams.trademark,
+              segmentParams.barcode,
+            ],
             enabled: true,
           },
         },

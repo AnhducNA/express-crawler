@@ -1,6 +1,6 @@
-import { SakukoEventService } from '@service/sakuko-event.service'
+import { SakukoCheckService } from '@service/sakuko-check.service'
 import { SakukoService } from '@service/sakuko.service'
-import { Body, Get, JsonController, QueryParams, Res } from 'routing-controllers'
+import { Body, Get, JsonController, QueryParam, QueryParams, Res } from 'routing-controllers'
 import { Service } from 'typedi'
 import reader from 'xlsx'
 
@@ -9,7 +9,7 @@ import reader from 'xlsx'
 export class UserController {
   constructor(
     protected sakukoService: SakukoService,
-    protected sakukoEventService: SakukoEventService,
+    protected sakukoEventService: SakukoCheckService,
   ) {}
 
   @Get('/download-excel')
@@ -38,10 +38,15 @@ export class UserController {
     return true
   }
 
-  //  QuaTrungThu2024
-  @Get('/autumn-festival')
-  async midAutumnFestivalGifts(@Res() res: Response) {
-    const data = await this.sakukoEventService.getMidAutumnFestivalGifts()
+  @Get('/delete-chatx-not-exit-in-mysql')
+  async deleteChatxNotExitInMysql(@Res() res: Response) {
+    const data = await this.sakukoEventService.deleteChatxNotExitInMysql()
+    return data
+  }
+
+  @Get('/check-by-category')
+  async checkCountCategory(@QueryParam('search') search: string, @Res() res: Response) {
+    const data = await this.sakukoEventService.checkChatxNotExitInMysql(search)
     return data
   }
 

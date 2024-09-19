@@ -12,10 +12,10 @@ const productCategoryData: { name: string; url: string; startPage?: number }[] =
   //   name: 'flash-sale-24h', //19
   //   url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
   // },
-  // {
-  //   name: 'sua-cho-be', // 9
-  //   url: 'https://sakukostore.com.vn/collections/sua-cho-be',
-  // },
+  {
+    name: 'sua-cho-be', // 9
+    url: 'https://sakukostore.com.vn/collections/sua-cho-be',
+  },
   // {
   //   name: 'me-be', //174 => saved 174
   //   url: 'https://sakukostore.com.vn/collections/me-be',
@@ -36,11 +36,11 @@ const productCategoryData: { name: string; url: string; startPage?: number }[] =
   //   name: 'nha-cua-doi-song', // 516 => saved 516
   //   url: 'https://sakukostore.com.vn/collections/nha-cua-doi-song',
   // },
-  {
-    name: 'hang-order', // 546 => saved 546
-    url: 'https://sakukostore.com.vn/collections/hang-order',
-    startPage: 30,
-  },
+  // {
+  //   name: 'hang-order', // 546 => saved 546
+  //   url: 'https://sakukostore.com.vn/collections/hang-order',
+  //   startPage: 30,
+  // },
 ]
 
 export default productCategoryData
