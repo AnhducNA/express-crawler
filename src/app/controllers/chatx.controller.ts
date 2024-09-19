@@ -38,12 +38,7 @@ export class ChatXController {
     @QueryParams() queryParams: TokenChatxDto,
     @Res() res: any,
   ) {
-    const data = await this.chatxService.deleteSegment(
-      queryParams.token,
-      params.datasetId,
-      params.documentId,
-      params.segmentId,
-    )
+    const data = await this.chatxService.deleteSegment(params.segmentId)
     return res.status(200).json({ data })
   }
 

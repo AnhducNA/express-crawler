@@ -1,6 +1,4 @@
-import puppeteer from 'puppeteer'
 import { Service } from 'typedi'
-import fs from 'fs'
 import { ChatXService } from './chatx.service'
 import { chatx } from 'src/config/env.config'
 import { ProductService } from './product.service'
@@ -14,15 +12,35 @@ export class SakukoCheckService {
     protected productService: ProductService,
   ) {}
 
-  async deleteChatxNotExitInMysql() {
-    const productHaveChatxNotExit: {
-      productNotInSegment: ProductEntity[]
-      total: number
-      category: { name: string; url: string; startPage?: number }
-    }[] = []
+  async getRedundantSegmentInChatX() {
+    const redundantSegmentInChatX = []
     await Promise.all(
       productCategoryData.map(async (category) => {
-        const productHaveChatxNotExitByCategory = await this.checkChatxNotExitInMysql(category.name)
+        const segmentsNotExitInMysql = await this.getSegmentNotExitInMysql(category.name)
+        redundantSegmentInChatX.push({ ...segmentsNotExitInMysql, category })
+      }),
+    )
+    return redundantSegmentInChatX
+  }
+
+  async deleteRedundantSegmentInChatX() {
+    await Promise.all(
+      productCategoryData.map(async (category) => {
+        const segmentsNotExitInMysql = await this.getSegmentNotExitInMysql(category.name)
+        for (const segment of segmentsNotExitInMysql.segmentNotInMysql) {
+          await this.chatxService.deleteSegment(segment.segmentId)
+        }
+      }),
+    )
+    return { status: true }
+  }
+
+  async deleteChatxNotExitInMysql() {
+    await Promise.all(
+      productCategoryData.map(async (category) => {
+        const productHaveChatxNotExitByCategory = await this.getProductWithSegmentNotExitByCategory(
+          category.name,
+        )
         productHaveChatxNotExitByCategory.productNotInSegment.map(async (item) => {
           await this.productService.updateChatxId(item.id, null)
         })
@@ -31,7 +49,7 @@ export class SakukoCheckService {
     return { status: true }
   }
 
-  async getProductHaveChatxNotExit() {
+  async getProductWithSegmentNotExit() {
     const productHaveChatxNotExit: {
       productNotInSegment: ProductEntity[]
       total: number
@@ -39,14 +57,49 @@ export class SakukoCheckService {
     }[] = []
     await Promise.all(
       productCategoryData.map(async (category) => {
-        const productHaveChatxNotExitByCategory = await this.checkChatxNotExitInMysql(category.name)
+        const productHaveChatxNotExitByCategory = await this.getProductWithSegmentNotExitByCategory(
+          category.name,
+        )
         productHaveChatxNotExit.push({ ...productHaveChatxNotExitByCategory, category })
       }),
     )
     return productHaveChatxNotExit
   }
 
-  async checkChatxNotExitInMysql(search?: string) {
+  async getSegmentNotExitInMysql(search?: string) {
+    search = search ? search : ''
+    const segments: {
+      data: { id: string; content: string; keywords: string[] }[]
+      doc_form: string
+      total: number
+    } = await this.chatxService.getSegments(chatx.token, chatx.dataset, chatx.document)
+    const segmentsFilter: { productId: number; segmentId: string }[] = segments.data
+      .filter((segment) => {
+        try {
+          const content = JSON.parse(segment.content)
+          return content.categoryType.includes(search)
+        } catch (error) {
+          return false
+        }
+      })
+      .map((segment) => {
+        try {
+          const content = JSON.parse(segment.content)
+          return { productId: content.id, segmentId: segment.id }
+        } catch (error) {}
+      })
+
+    const productByCategoryType = (
+      await this.productService.getWithChatxByCategoryType(search)
+    ).map((item) => item.id)
+
+    const segmentNotInMysql = segmentsFilter.filter(({ productId, segmentId }) => {
+      return !productByCategoryType.includes(productId)
+    })
+    return { segmentNotInMysql, total: segmentNotInMysql.length }
+  }
+
+  async getProductWithSegmentNotExitByCategory(search?: string) {
     search = search ? search : ''
     const segments: {
       data: { content: string; keywords: string[] }[]

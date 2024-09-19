@@ -50,12 +50,12 @@ export class ChatXService {
       })
   }
 
-  async deleteSegment(token: string, datasetId: string, documentId: string, segmentId: string) {
+  async deleteSegment(segmentId: string) {
     return await axios
       .delete(
-        `https://api.chatx.vn/v1/datasets/${datasetId}/documents/${documentId}/segments/${segmentId}`,
+        `https://api.chatx.vn/v1/datasets/${chatx.dataset}/documents/${chatx.document}/segments/${segmentId}`,
         {
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${chatx.token}`, 'Content-Type': 'application/json' },
         },
       )
       .then((res) => {

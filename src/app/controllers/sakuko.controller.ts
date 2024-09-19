@@ -38,15 +38,28 @@ export class UserController {
     return true
   }
 
+
   @Get('/delete-chatx-not-exit-in-mysql')
   async deleteChatxNotExitInMysql(@Res() res: Response) {
     const data = await this.sakukoEventService.deleteChatxNotExitInMysql()
     return data
   }
 
+  @Get('/get-redundant-segment-chatx')
+  async getRedundantSegmentInChatx(@Res() res: Response) {
+    const data = await this.sakukoEventService.getRedundantSegmentInChatX()
+    return data
+  }
+
+  @Get('/delete-redundant-segment-chatx')
+  async deleteRedundantSegmentInChatx(@Res() res: Response) {
+    const data = await this.sakukoEventService.deleteRedundantSegmentInChatX()
+    return data
+  }
+
   @Get('/check-by-category')
   async checkCountCategory(@QueryParam('search') search: string, @Res() res: Response) {
-    const data = await this.sakukoEventService.checkChatxNotExitInMysql(search)
+    const data = await this.sakukoEventService.getProductWithSegmentNotExitByCategory(search)
     return data
   }
 
