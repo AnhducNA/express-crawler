@@ -146,8 +146,8 @@ export class SakukoCheckService {
 
   async getProductNotUpdated() {
     const productsNotUpdate = await this.productService.getProductNotUpdate()
-    console.log(productsNotUpdate, 456465)
     if (!productsNotUpdate || productsNotUpdate.length === 0) return []
+    const productUpdated = []
     for (const product of productsNotUpdate) {
       console.log(`Access browser detail product: ` + product.url)
       let detailData: IProduct
@@ -174,6 +174,7 @@ export class SakukoCheckService {
       }
       if (detailData && detailData.id) {
         detailData.categoryType = product.categoryType
+        productUpdated.push(detailData)
         try {
           await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
           console.log(`Detail product: `, {
@@ -186,5 +187,6 @@ export class SakukoCheckService {
         }
       }
     }
+    return productUpdated;
   }
 }

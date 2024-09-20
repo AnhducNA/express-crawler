@@ -19,7 +19,7 @@ export class ProductService {
     { id: number; chatxId: string; url: string; categoryType: string }[]
   > {
     const date = new Date()
-    date.setDate(date.getDate() - 2)
+    date.setDate(date.getDate() - 1)
     return await ProductEntity.findAll({
       attributes: ['id', 'chatxId', 'url', 'categoryType'],
       where: {
