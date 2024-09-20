@@ -40,7 +40,7 @@ export class UserController {
 
   @Get('/refresh-data')
   async handleProductNotUpdated(@Res() res: Response) {
-    const productNotUpdated = await this.sakukoCheckService.getProductNotUpdated()
+    const productNotUpdated = await this.sakukoCheckService.handleProductNotUpdated()
     return productNotUpdated
   }
 

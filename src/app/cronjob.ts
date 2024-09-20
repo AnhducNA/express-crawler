@@ -106,4 +106,9 @@ export const scheduleCronJobs = () => {
     }
     await sakukoService.scrapeDataInCategory(category)
   })
+
+  cron.schedule(' 00 7 * * *', async () => {
+    console.log('Running scrapeData at 5:30 everyday')
+    await sakukoCheckService.handleProductNotUpdated()
+  })
 }

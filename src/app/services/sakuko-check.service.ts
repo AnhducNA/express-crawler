@@ -144,7 +144,7 @@ export class SakukoCheckService {
     return { productNotInSegment, total: productNotInSegment.length }
   }
 
-  async getProductNotUpdated() {
+  async handleProductNotUpdated() {
     const productsNotUpdate = await this.productService.getProductNotUpdate()
     if (!productsNotUpdate || productsNotUpdate.length === 0) return []
     const productUpdated = []
