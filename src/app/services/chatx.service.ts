@@ -59,8 +59,6 @@ export class ChatXService {
         },
       )
       .then((res) => {
-        console.log(res)
-
         return res.data
       })
       .catch((e) => {

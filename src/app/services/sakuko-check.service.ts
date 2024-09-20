@@ -35,6 +35,19 @@ export class SakukoCheckService {
     return { status: true }
   }
 
+  async getChatxNotExitInMysql() {
+    const productHaveChatxNotExit = []
+    await Promise.all(
+      productCategoryData.map(async (category) => {
+        const productHaveChatxNotExitByCategory = await this.getProductWithSegmentNotExitByCategory(
+          category.name,
+        )
+        productHaveChatxNotExit.push({ ...productHaveChatxNotExitByCategory, category })
+      }),
+    )
+    return productHaveChatxNotExit
+  }
+
   async deleteChatxNotExitInMysql() {
     await Promise.all(
       productCategoryData.map(async (category) => {
@@ -91,10 +104,10 @@ export class SakukoCheckService {
 
     const productByCategoryType = (
       await this.productService.getWithChatxByCategoryType(search)
-    ).map((item) => item.id)
+    ).map((item) => item.chatxId)
 
     const segmentNotInMysql = segmentsFilter.filter(({ productId, segmentId }) => {
-      return !productByCategoryType.includes(productId)
+      return !productByCategoryType.includes(segmentId)
     })
     return { segmentNotInMysql, total: segmentNotInMysql.length }
   }

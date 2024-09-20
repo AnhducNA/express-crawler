@@ -38,9 +38,14 @@ export class UserController {
     return true
   }
 
+  @Get('/get-product-have-chatx-not-exit')
+  async getProductHaveChatxNotExit(@Res() res: Response) {
+    const data = await this.sakukoEventService.getChatxNotExitInMysql()
+    return data
+  }
 
   @Get('/delete-chatx-not-exit-in-mysql')
-  async deleteChatxNotExitInMysql(@Res() res: Response) {
+  async deleteProductHaveChatxNotExit(@Res() res: Response) {
     const data = await this.sakukoEventService.deleteChatxNotExitInMysql()
     return data
   }

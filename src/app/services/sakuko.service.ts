@@ -124,39 +124,50 @@ export class SakukoService {
     const currentPageTotalData: { id: number; title: string; type: string }[] = []
     // urls = []
     for (const link of urls) {
-      let numRunsCheckError = 0
-      LOOPERROR: do {
+      console.log(`Accessing the page: ${paginationLink}`)
+      console.log(`Access browser detail product: ` + link)
+      let detailData: IProduct
+      let numRunsLoadErrorPage = 0
+      LOOP_ERROR_PAGE: do {
         try {
-          console.log(`Accessing the page: ${paginationLink}`)
-          console.log(`Access browser detail product: ` + link)
-          const detailData = await this.pageDetailPromise(link)
-          if (detailData.id) {
-            currentPageTotalData.push({
-              id: detailData.id,
-              title: detailData.title,
-              type: detailData.type,
-            })
-            detailData.categoryType = categoryType
-            try {
-              await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
-              console.log(`Detail product: `, {
-                id: detailData.id,
-                title: detailData.title,
-                price: detailData.price,
-              })
-            } catch (error) {
-              throw new BadRequestError('Error createOrUpdateSegmentsWithDatabaseToProduct')
-            }
-          }
-          break LOOPERROR
+          detailData = await this.pageDetailPromise(link)
+          break LOOP_ERROR_PAGE
         } catch (error) {
-          numRunsCheckError++
-          if (numRunsCheckError >= 2) {
-            throw new BadRequestError(`Error accessing detail product at ${link}`)
+          console.log(error)
+          numRunsLoadErrorPage++
+          if (numRunsLoadErrorPage >= 3) {
+            console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
+            break LOOP_ERROR_PAGE
+            // throw new BadRequestError(`Error accessing detail product at ${link}`)
           }
-          continue LOOPERROR
+          continue LOOP_ERROR_PAGE
         }
       } while (true)
+
+      if (!detailData) {
+        console.log(87879879)
+        continue
+      }
+
+      if (detailData && detailData.id) {
+        currentPageTotalData.push({
+          id: detailData.id,
+          title: detailData.title,
+          type: detailData.type,
+        })
+        detailData.categoryType = categoryType
+        try {
+          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+          console.log(`Detail product: `, {
+            id: detailData.id,
+            title: detailData.title,
+            price: detailData.price,
+          })
+        } catch (error) {
+          console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
+          // throw new BadRequestError(`Error accessing detail product at ${link}`)
+        }
+      }
     }
     await page.close()
     await browser.close()

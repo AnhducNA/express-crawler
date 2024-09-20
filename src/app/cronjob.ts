@@ -12,6 +12,11 @@ export const scheduleCronJobs = () => {
     await sakukoCheckService.deleteChatxNotExitInMysql()
   })
 
+  cron.schedule(' 05 0 * * *', async () => {
+    console.log('Running scrapeData at 0:00 everyday')
+    await sakukoCheckService.deleteRedundantSegmentInChatX()
+  })
+
   cron.schedule(' 10 00 * * *', async () => {
     console.log('Running scrapeData at 0:00 everyday')
     const category = {
