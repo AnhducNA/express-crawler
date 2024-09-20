@@ -136,19 +136,16 @@ export class SakukoService {
           console.log(error)
           numRunsLoadErrorPage++
           if (numRunsLoadErrorPage >= 3) {
-            console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
+            console.log(`Error accessing detail product at ${link}`)
             break LOOP_ERROR_PAGE
             // throw new BadRequestError(`Error accessing detail product at ${link}`)
           }
           continue LOOP_ERROR_PAGE
         }
       } while (true)
-
       if (!detailData) {
-        console.log(87879879)
         continue
       }
-
       if (detailData && detailData.id) {
         currentPageTotalData.push({
           id: detailData.id,

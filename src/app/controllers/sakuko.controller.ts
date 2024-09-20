@@ -9,7 +9,7 @@ import reader from 'xlsx'
 export class UserController {
   constructor(
     protected sakukoService: SakukoService,
-    protected sakukoEventService: SakukoCheckService,
+    protected sakukoCheckService: SakukoCheckService,
   ) {}
 
   @Get('/download-excel')
@@ -38,33 +38,39 @@ export class UserController {
     return true
   }
 
+  @Get('/refresh-data')
+  async handleProductNotUpdated(@Res() res: Response) {
+    const productNotUpdated = await this.sakukoCheckService.getProductNotUpdated()
+    return productNotUpdated
+  }
+
   @Get('/get-product-have-chatx-not-exit')
   async getProductHaveChatxNotExit(@Res() res: Response) {
-    const data = await this.sakukoEventService.getChatxNotExitInMysql()
+    const data = await this.sakukoCheckService.getChatxNotExitInMysql()
     return data
   }
 
   @Get('/delete-chatx-not-exit-in-mysql')
   async deleteProductHaveChatxNotExit(@Res() res: Response) {
-    const data = await this.sakukoEventService.deleteChatxNotExitInMysql()
+    const data = await this.sakukoCheckService.deleteChatxNotExitInMysql()
     return data
   }
 
   @Get('/get-redundant-segment-chatx')
   async getRedundantSegmentInChatx(@Res() res: Response) {
-    const data = await this.sakukoEventService.getRedundantSegmentInChatX()
+    const data = await this.sakukoCheckService.getRedundantSegmentInChatX()
     return data
   }
 
   @Get('/delete-redundant-segment-chatx')
   async deleteRedundantSegmentInChatx(@Res() res: Response) {
-    const data = await this.sakukoEventService.deleteRedundantSegmentInChatX()
+    const data = await this.sakukoCheckService.deleteRedundantSegmentInChatX()
     return data
   }
 
   @Get('/check-by-category')
   async checkCountCategory(@QueryParam('search') search: string, @Res() res: Response) {
-    const data = await this.sakukoEventService.getProductWithSegmentNotExitByCategory(search)
+    const data = await this.sakukoCheckService.getProductWithSegmentNotExitByCategory(search)
     return data
   }
 

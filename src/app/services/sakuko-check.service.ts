@@ -4,12 +4,15 @@ import { chatx } from 'src/config/env.config'
 import { ProductService } from './product.service'
 import productCategoryData from 'src/data/product-category.data'
 import ProductEntity from '@models/products.model'
+import { IProduct } from '@interfaces/sakuko.product.interface'
+import { SakukoService } from './sakuko.service'
 
 @Service()
 export class SakukoCheckService {
   constructor(
     protected chatxService: ChatXService,
     protected productService: ProductService,
+    protected sakukoService: SakukoService,
   ) {}
 
   async getRedundantSegmentInChatX() {
@@ -139,5 +142,49 @@ export class SakukoCheckService {
       (product) => !segmentFilter.includes(product.id),
     )
     return { productNotInSegment, total: productNotInSegment.length }
+  }
+
+  async getProductNotUpdated() {
+    const productsNotUpdate = await this.productService.getProductNotUpdate()
+    console.log(productsNotUpdate, 456465)
+    if (!productsNotUpdate || productsNotUpdate.length === 0) return []
+    for (const product of productsNotUpdate) {
+      console.log(`Access browser detail product: ` + product.url)
+      let detailData: IProduct
+      let numRunsLoadErrorPage = 0
+      LOOP_ERROR_PAGE: do {
+        try {
+          detailData = await this.sakukoService.pageDetailPromise(product.url)
+          break LOOP_ERROR_PAGE
+        } catch (error) {
+          console.log(error)
+          numRunsLoadErrorPage++
+          if (numRunsLoadErrorPage >= 3) {
+            await this.productService.deleteById(product.id)
+            await this.chatxService.deleteSegment(product.chatxId)
+            console.log(`Delete detail product at ${product.url}`)
+            // break LOOP_ERROR_PAGE
+            // throw new BadRequestError(`Error accessing detail product at ${link}`)
+          }
+          continue LOOP_ERROR_PAGE
+        }
+      } while (true)
+      if (!detailData) {
+        continue
+      }
+      if (detailData && detailData.id) {
+        detailData.categoryType = product.categoryType
+        try {
+          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+          console.log(`Detail product: `, {
+            id: detailData.id,
+            title: detailData.title,
+            price: detailData.price,
+          })
+        } catch (error) {
+          console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
+        }
+      }
+    }
   }
 }
