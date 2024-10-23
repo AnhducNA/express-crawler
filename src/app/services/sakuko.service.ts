@@ -21,7 +21,15 @@ export class SakukoService {
       console.log(`Total scrapedData of ${category.name}: `, listProduct.length)
     }
     console.log('Total scrapedData: ', productData.length)
-    console.log('================Completed===================')
+    console.log(
+      '================Completed at ' +
+        new Date().toLocaleString('vi-VN', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+          timeZone: 'Asia/Ho_Chi_Minh',
+        }) +
+        '===========================',
+    )
     return productData
   }
 
