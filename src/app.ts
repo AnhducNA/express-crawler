@@ -27,7 +27,13 @@ class App {
   public listen() {
     return new Promise((resolve) => {
       this.app.listen(this.port, () => {
-        console.log(`🚀 App listening on the port ${this.port}`)
+        console.log(
+          `🚀 App listening on the port ${this.port} at ${new Date().toLocaleString('vi-VN', {
+            dateStyle: 'short',
+            timeStyle: 'medium',
+            timeZone: 'Asia/Ho_Chi_Minh',
+          })}`,
+        )
       })
     })
   }

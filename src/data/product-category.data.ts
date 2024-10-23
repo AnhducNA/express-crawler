@@ -4,19 +4,6 @@ const productCategoryData: { name: string; url: string; startPage?: number }[] =
     url: 'https://sakukostore.com.vn/collections/sua-cho-be',
   },
   {
-    name: 'sieu-sale-sinh-nhat-mung-sakuko-len-13', //182 => saved: 182
-    url: 'https://sakukostore.com.vn/collections/sieu-sale-sinh-nhat-mung-sakuko-len-13',
-  },
-  {
-    name: 'set-qua-trung-thu-2024', //16
-    url: 'https://sakukostore.com.vn/collections/set-qua-trung-thu-2024',
-    startPage: 1,
-  },
-  {
-    name: 'flash-sale-24h', //19
-    url: 'https://sakukostore.com.vn/collections/flash-sale-24h',
-  },
-  {
     name: 'me-be', //174 => saved 174
     url: 'https://sakukostore.com.vn/collections/me-be',
   },

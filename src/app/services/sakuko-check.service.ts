@@ -146,7 +146,10 @@ export class SakukoCheckService {
 
   async handleProductNotUpdated() {
     const productsNotUpdate = await this.productService.getProductNotUpdate()
-    if (!productsNotUpdate || productsNotUpdate.length === 0) return []
+    if (!productsNotUpdate || productsNotUpdate.length === 0) {
+      console.log('============== Completed to refresh product =============')
+      return []
+    }
     const productUpdated: { id: number; chatxId: string; url: string; categoryType: string }[] = []
     for (const product of productsNotUpdate) {
       console.log(`Access browser detail product: ` + product.url)
@@ -187,6 +190,7 @@ export class SakukoCheckService {
         }
       }
     }
+    console.log('============== Completed to refresh product =============')
     return productUpdated
   }
 }

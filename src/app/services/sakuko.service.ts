@@ -100,7 +100,7 @@ export class SakukoService {
     try {
       await page.goto(paginationLink, {
         waitUntil: 'networkidle2',
-        timeout: 0,
+        timeout: 30000,
       })
     } catch (error) {
       console.error('Error opening category page:', error)
@@ -178,7 +178,7 @@ export class SakukoService {
     // Navigate to the URL
     await page.goto(link, {
       waitUntil: 'domcontentloaded',
-      timeout: 0,
+      timeout: 30000,
     })
     const dataObject = await this.getObjectDetailFromScript(page)
     await page.close()
