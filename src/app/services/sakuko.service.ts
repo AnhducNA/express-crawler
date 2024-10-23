@@ -162,7 +162,7 @@ export class SakukoService {
           })
         } catch (error) {
           console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
-          // throw new BadRequestError(`Error accessing detail product at ${link}`)
+          throw new BadRequestError(`Error createOrUpdateSegmentsWithDatabaseToProduct`)
         }
       }
     }

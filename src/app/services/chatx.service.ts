@@ -174,13 +174,7 @@ export class ChatXService {
       })
       .catch((e) => {
         console.log(`Error axios update segment with code: ${e.code}: ` + e)
-        switch (e.code) {
-          case 'CERT_HAS_EXPIRED':
-          case 400:
-            return
-          default:
-            throw new BadRequestError('Error axios updateSegment')
-        }
+        throw new BadRequestError('Error axios updateSegment')
       })
   }
 }
