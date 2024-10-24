@@ -172,9 +172,14 @@ export class SakukoCheckService {
           continue LOOP_ERROR_PAGE
         }
       } while (true)
+
       if (!detailData) {
+        await this.productService.deleteById(product.id)
+        await this.chatxService.deleteSegment(product.chatxId)
+        console.log(`Delete detail product at ${product.url}`)
         continue
       }
+
       if (detailData && detailData.id) {
         detailData.categoryType = product.categoryType
         productUpdated.push(product)
@@ -190,7 +195,15 @@ export class SakukoCheckService {
         }
       }
     }
-    console.log('============== Completed to refresh product =============')
+    console.log(
+      '============================= Completed refresh at ' +
+        new Date().toLocaleString('vi-VN', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+          timeZone: 'Asia/Ho_Chi_Minh',
+        }) +
+        '============================',
+    )
     return productUpdated
   }
 }
