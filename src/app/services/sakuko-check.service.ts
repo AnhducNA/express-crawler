@@ -6,6 +6,7 @@ import productCategoryData from 'src/data/product-category.data'
 import ProductEntity from '@models/products.model'
 import { IProduct } from '@interfaces/sakuko.product.interface'
 import { SakukoService } from './sakuko.service'
+import { BadRequestError } from 'routing-controllers'
 
 @Service()
 export class SakukoCheckService {
@@ -163,11 +164,11 @@ export class SakukoCheckService {
           console.log(error)
           numRunsLoadErrorPage++
           if (numRunsLoadErrorPage >= 3) {
-            await this.productService.deleteById(product.id)
-            await this.chatxService.deleteSegment(product.chatxId)
+            // await this.productService.deleteById(product.id)
+            // await this.chatxService.deleteSegment(product.chatxId)
             console.log(`Delete detail product at ${product.url}`)
             // break LOOP_ERROR_PAGE
-            // throw new BadRequestError(`Error accessing detail product at ${link}`)
+            throw new BadRequestError(`Error accessing detail product at ${product.url}`)
           }
           continue LOOP_ERROR_PAGE
         }
@@ -204,6 +205,87 @@ export class SakukoCheckService {
         }) +
         '============================',
     )
+    return productUpdated
+  }
+  async updateSegmentChatxDisabled() {
+    const segments: {
+      data: { id: string; content: string; keywords: string[]; enabled: boolean }[]
+      doc_form: string
+      total: number
+    } = await this.chatxService.getSegments(chatx.token, chatx.dataset, chatx.document)
+
+    const productsFilter = segments.data
+      .filter((segment) => segment.enabled === false)
+      .map((segment) => {
+        const product = JSON.parse(segment.content)
+        delete product.description
+        return {
+          id: product.id,
+          chatxId: segment.id,
+          url: product.url,
+          categoryType: product.categoryType,
+        }
+      })
+    await this.refreshData(productsFilter)
+    console.log(
+      '============================= Completed updateSegmentChatxDisabled at ' +
+        new Date().toLocaleString('vi-VN', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+          timeZone: 'Asia/Ho_Chi_Minh',
+        }) +
+        '============================',
+    )
+    return productsFilter
+  }
+
+  async refreshData(
+    productList: { id: number; chatxId: string; url: string; categoryType: string }[],
+  ) {
+    const productUpdated: { id: number; chatxId: string; url: string; categoryType: string }[] = []
+    for (const product of productList) {
+      console.log(`Access browser detail product: ` + product.url)
+      let detailData: IProduct
+      let numRunsLoadErrorPage = 0
+      LOOP_ERROR_PAGE: do {
+        try {
+          detailData = await this.sakukoService.pageDetailPromise(product.url)
+          break LOOP_ERROR_PAGE
+        } catch (error) {
+          console.log(error)
+          numRunsLoadErrorPage++
+          if (numRunsLoadErrorPage >= 3) {
+            // await this.productService.deleteById(product.id)
+            // await this.chatxService.deleteSegment(product.chatxId)
+            console.log(`Error accessing detail product at ${product.url}`)
+            throw new BadRequestError(`Error accessing detail product at ${product.url}`)
+          }
+          continue LOOP_ERROR_PAGE
+        }
+      } while (true)
+
+      if (!detailData) {
+        await this.productService.deleteById(product.id)
+        await this.chatxService.deleteSegment(product.chatxId)
+        console.log(`Delete detail product at ${product.url}`)
+        continue
+      }
+
+      if (detailData && detailData.id) {
+        detailData.categoryType = product.categoryType
+        productUpdated.push(product)
+        try {
+          await this.chatxService.createOrUpdateSegmentsWithDatabaseToProduct(detailData)
+          console.log(`Detail product: `, {
+            id: detailData.id,
+            title: detailData.title,
+            price: detailData.price,
+          })
+        } catch (error) {
+          console.log('Error createOrUpdateSegmentsWithDatabaseToProduct')
+        }
+      }
+    }
     return productUpdated
   }
 }

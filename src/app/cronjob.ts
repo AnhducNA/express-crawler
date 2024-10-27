@@ -21,7 +21,7 @@ export const scheduleCronJobs = () => {
     console.log('Running scrapeData at 0:00 everyday')
     await sakukoService.scrapeAllData()
     console.log(
-      '============================= Completed at ' +
+      '============================= Completed refresh at ' +
         new Date().toLocaleString('vi-VN', {
           dateStyle: 'short',
           timeStyle: 'medium',
@@ -97,7 +97,7 @@ export const scheduleCronJobs = () => {
   cron.schedule(' 00 5 * * *', async () => {
     await sakukoCheckService.handleProductNotUpdated()
     console.log(
-      '============================= Completed at ' +
+      '============================= Completed refresh at ' +
         new Date().toLocaleString('vi-VN', {
           dateStyle: 'short',
           timeStyle: 'medium',

@@ -56,6 +56,12 @@ export class UserController {
     return data
   }
 
+  @Get('/update-segment-chatx-disabled')
+  async updateSegmentChatxDisabled(@Res() res: Response) {
+    const data = await this.sakukoCheckService.updateSegmentChatxDisabled()
+    return data
+  }
+  
   @Get('/get-redundant-segment-chatx')
   async getRedundantSegmentInChatx(@Res() res: Response) {
     const data = await this.sakukoCheckService.getRedundantSegmentInChatX()

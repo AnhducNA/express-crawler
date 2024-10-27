@@ -22,7 +22,7 @@ export class SakukoService {
     }
     console.log('Total scrapedData: ', productData.length)
     console.log(
-      '================Completed at ' +
+      '================Completed scrapeAllData at ' +
         new Date().toLocaleString('vi-VN', {
           dateStyle: 'short',
           timeStyle: 'medium',
@@ -202,13 +202,26 @@ export class SakukoService {
               ((Number(originalPrice) - Number(price)) / Number(originalPrice)) * 100,
             ).toFixed(2)
           : 0
+      let inventoryPolicy = ''
+      switch (dataObject.variants[0].inventory_policy) {
+        case 'continue':
+          inventoryPolicy = 'Còn hàng'
+          break
+        case 'deny':
+          inventoryPolicy = 'Hết hàng'
+          break
+        default:
+          inventoryPolicy = 'Hết hàng'
+          break
+      }
+
       return {
         id: dataObject.id,
         url: link,
         title: dataObject.title,
         type: dataObject.type,
         inventoryQuantity: dataObject.variants[0].inventory_quantity,
-        inventoryPolicy: dataObject.variants[0].inventory_policy,
+        inventoryPolicy: inventoryPolicy,
         sku: dataObject.variants[0].sku,
         barcode: dataObject.variants[0].barcode,
         featuredImage: dataObject.featured_image,
