@@ -13,7 +13,12 @@ export class SakukoService {
   constructor(protected chatxService: ChatXService) {}
 
   async scrapeAllData() {
-    const categories: { name: string; url: string; startPage?: number }[] = productCategoryData
+    const categories: {
+      name: string
+      url: string
+      startPage?: number
+      endPage?: number
+    }[] = productCategoryData
     const productData = []
     for (const category of categories) {
       const listProduct = await this.scrapeListProductPage(category)
@@ -33,13 +38,23 @@ export class SakukoService {
     return productData
   }
 
-  async scrapeDataInCategory(category: { name: string; url: string; startPage?: number }) {
+  async scrapeDataInCategory(category: {
+    name: string
+    url: string
+    startPage?: number
+    endPage?: number
+  }) {
     const productData = await this.scrapeListProductPage(category)
     console.log(`Total scrapedData of ${category.name}: `, productData.length)
     return productData
   }
 
-  async scrapeListProductPage(category: { name: string; url: string; startPage?: number }) {
+  async scrapeListProductPage(category: {
+    name: string
+    url: string
+    startPage?: number
+    endPage?: number
+  }) {
     const browser = await puppeteer.launch({
       ignoreHTTPSErrors: true, // Ignore SSL certificate errors
       headless: false,
@@ -54,7 +69,12 @@ export class SakukoService {
       console.error('Error opening category browser:', error)
       return []
     }
-    const paginationLinks = await this.getPaginationLinks(page, category.url, category.startPage)
+    const paginationLinks = await this.getPaginationLinks(
+      page,
+      category.url,
+      category.startPage,
+      category.endPage,
+    )
     console.log('paginationLinks: ', paginationLinks)
 
     await page.close()
@@ -74,28 +94,30 @@ export class SakukoService {
     page: Page,
     categoryLink: string,
     startPage?: number,
+    endPage?: number,
   ): Promise<string[]> {
-    let validMaxPage = 1
     startPage = startPage ? startPage : 1
-    try {
-      validMaxPage = await page.$$eval('#pagination li a', (elements) => {
-        const validPages = elements
-          .map((e) => {
-            return +e.textContent
-          })
-          .filter((pageNum: number) => {
-            return pageNum > 0 && pageNum !== null
-          })
-        if (!validPages || validPages.length === 0) {
-          return 1
-        }
-        return Math.max(...validPages)
-      })
-    } catch (error) {
-      validMaxPage = 1
+    if (!endPage) {
+      try {
+        endPage = await page.$$eval('#pagination li a', (elements) => {
+          const validPages = elements
+            .map((e) => {
+              return +e.textContent
+            })
+            .filter((pageNum: number) => {
+              return pageNum > 0 && pageNum !== null
+            })
+          if (!validPages || validPages.length === 0) {
+            return 1
+          }
+          return Math.max(...validPages)
+        })
+      } catch (error) {
+        endPage = 1
+      }
     }
     const paginationLinks: string[] = []
-    for (let page = startPage; page <= validMaxPage; page++) {
+    for (let page = startPage; page <= endPage; page++) {
       paginationLinks.push(categoryLink + '?page=' + page)
     }
     return paginationLinks
